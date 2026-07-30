@@ -38,7 +38,9 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger("rxfind.server")
 
 HERE = Path(__file__).parent
-PHARMACIES = HERE / "pharmacies.csv"
+# Point at a gitignored local list for real runs, so real numbers never reach
+# the repo: export RXFIND_PHARMACIES=pharmacies.local.csv
+PHARMACIES = HERE / os.environ.get("RXFIND_PHARMACIES", "pharmacies.csv")
 RUNS = HERE / "runs"
 
 REPLAY = os.environ.get("RXFIND_REPLAY") == "1"

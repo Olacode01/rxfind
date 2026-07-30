@@ -156,9 +156,11 @@ def parse_summary_fields(summary: str, keys: Iterable[str]) -> dict[str, str]:
     out: dict[str, str] = {}
     for i, m in enumerate(matches):
         end = matches[i + 1].start() if i + 1 < len(matches) else len(summary)
-        value = summary[m.end():end].strip().strip(",").strip()
+        # The separator between fields is not stable — observed both ", " and
+        # "; " across runs. Strip any of them rather than assuming one.
+        value = summary[m.end():end].strip().strip(",;").strip()
         if len(value) < 40:
-            value = value.rstrip(".").strip()
+            value = value.rstrip(".;,").strip()
         out[m.group(1).lower()] = value
     return out
 

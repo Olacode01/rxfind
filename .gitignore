@@ -12,8 +12,12 @@ __pycache__/
 calle_mcp_client.py
 
 # Your real pharmacy list. Keep real numbers out of the repo — copy
-# pharmacies.csv to this name and edit it for live runs.
+# pharmacies.csv to this name and edit it for live runs, then
+# export RXFIND_PHARMACIES=pharmacies.local.csv
 pharmacies.local.csv
+
+# Local demo planning notes
+DEMO.md
 
 # NOTE: runs/ is intentionally NOT ignored.
 # The saved plan/run/result JSON is evidence the agent ran against a real call

@@ -1,0 +1,224 @@
+{
+  "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+  "requested_run_id": null,
+  "parent_run_id": null,
+  "root_run_id": null,
+  "status": "DECLINED",
+  "message": "The first call did not connect or complete, so the pharmacy may be busy or unavailable. Please confirm retrying in about 45 minutes, provide a different retry time, or ask to retry immediately.",
+  "display_goal": "Call the pharmacy on behalf of a patient looking for a medication. Identify yourself immediately as an automated assistant, keep the call brief and polite, and ask whether they currently have amoxicillin 500mg in stock. The patient needs 21 capsules. Capture the structured result using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), and pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached and do not treat that as a successful stock check.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "result": {
+    "summary": "The first call did not connect or complete; the pharmacy may be busy or unavailable, so you can confirm retrying in about 45 minutes, provide a different retry time, or ask to retry immediately.",
+    "post_summary": "The first call did not connect or complete; the pharmacy may be busy or unavailable, so you can confirm retrying in about 45 minutes, provide a different retry time, or ask to retry immediately.",
+    "outcome": {
+      "task_completed": false,
+      "completion_confidence": {
+        "score": 0.78,
+        "label": "high"
+      },
+      "evidence": [
+        "The call ended immediately with no call duration.",
+        "No transcript or speech was captured.",
+        "The medication stock-check questions were not answered."
+      ]
+    },
+    "extracted": {
+      "goal": "Call the pharmacy on behalf of a patient looking for a medication. Identify yourself immediately as an automated assistant, keep the call brief and polite, and ask whether they currently have amoxicillin 500mg in stock. The patient needs 21 capsules. Capture the structured result using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), and pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached and do not treat that as a successful stock check.",
+      "region": "GB",
+      "repair": {
+        "decision": {
+          "next_step": {
+            "action": "ask_user_for_retry_confirmation",
+            "plan_id": "pKYQSCGPC",
+            "tool_name": "plan_call",
+            "instruction": "The first call did not connect or complete, so the pharmacy may be busy or unavailable. Please confirm retrying in about 45 minutes, provide a different retry time, or ask to retry immediately.",
+            "parent_run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+            "required_user_input": []
+          },
+          "repair_type": "no_answer",
+          "execution_mode": "time_shift_retry",
+          "required_user_input": [],
+          "schedule_suggestion": {
+            "confidence": "medium",
+            "retry_strategy": "short_delay",
+            "retry_after_reason": "The pharmacy was not reached and may be temporarily unavailable.",
+            "requested_delay_minutes": null
+          }
+        },
+        "commit_metadata": {
+          "child_run_id": null,
+          "blocked_reasons": [],
+          "committed_action": "none",
+          "real_world_action_committed": false
+        }
+      },
+      "calling": {
+        "calls": [
+          {
+            "status": "DECLINED",
+            "intention": "F",
+            "ring_type": "normal",
+            "hangup_type": "ByCallee",
+            "reason_code": null,
+            "call_end_time": "2026-07-30T22:18:17Z",
+            "call_start_time": "2026-07-30T22:18:17Z",
+            "duration_seconds": 0
+          }
+        ],
+        "status": "DECLINED",
+        "ended_at": "2026-07-30T22:18:17Z",
+        "started_at": "2026-07-30T22:18:17Z",
+        "callee_count": 1,
+        "duration_seconds": 0
+      },
+      "language": "English",
+      "to_phones": [
+        "+15550102"
+      ]
+    },
+    "transcript": null,
+    "call_id": "23f30bb90d224a7ebae470e5672c1459",
+    "call_ids": [
+      "23f30bb90d224a7ebae470e5672c1459"
+    ],
+    "batch": null
+  },
+  "expires_at": null,
+  "activity": [
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:08:29.071614Z",
+      "level": "info",
+      "kind": "stage_start",
+      "message": "run_call started.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:08:31.916919Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "botlab create bot.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:08:54.862832Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "calling resolve robot id.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:08:57.345906Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "calling create task.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:08:58.178932Z",
+      "level": "info",
+      "kind": "result",
+      "message": "calling task created.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:08:58.945492Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=pending",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:13:40.565641Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=calling",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:13:50.018224Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call is ringing.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:15:19.867094Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call ended; syncing final Calling result.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:16:22.894995Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call is ringing.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:17:52.790521Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call ended; syncing final Calling result.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:18:22.238078Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call is ringing.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:19:52.118949Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call ended; syncing final Calling result.",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:20:28.831713Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=DECLINED",
+      "data": {}
+    },
+    {
+      "run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+      "ts": "2026-07-30T22:20:40.798567Z",
+      "level": "error",
+      "kind": "error",
+      "message": "calling task completed with status=DECLINED",
+      "data": {}
+    }
+  ],
+  "next_cursor": "1785450040799-0",
+  "next_step": {
+    "action": "ask_user_for_retry_confirmation",
+    "tool_name": "plan_call",
+    "run_id": null,
+    "plan_id": "pKYQSCGPC",
+    "parent_run_id": "qYFAlPBRr_UKE_p5WW6QEg",
+    "poll_after_seconds": null,
+    "scheduled_at": null,
+    "schedule_timezone": null,
+    "required_user_input": [],
+    "instruction": "The first call did not connect or complete, so the pharmacy may be busy or unavailable. Please confirm retrying in about 45 minutes, provide a different retry time, or ask to retry immediately."
+  }
+}
