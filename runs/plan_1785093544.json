@@ -1,0 +1,15 @@
+{
+  "plan_id": "p2N9HJYYG",
+  "ready_to_run": true,
+  "next_step": "The plan is ready. If a plan card UI is present, let it continue execution and do not call `run_call` again in chat. Only call `run_call` yourself if no plan card UI is available or the user explicitly asks to start or retry the call in chat.",
+  "clarifying_questions": [],
+  "display_goal": "Call the pharmacy on behalf of a patient looking for medication. Identify yourself immediately as an automated assistant, keep the call brief and polite, and ask whether they currently have amoxicillin 500mg in stock; the patient needs 21 capsules. Capture the structured result using exactly these key names: in_stock (yes/no/partial/unknown), form_available (brand/generic/both/unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes/no/unknown), can_hold (yes/no/unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), and pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached; do not treat that as a successful stock check.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "questions": [],
+  "confirm_summary": "Ready to place the call immediately to the pharmacy at ...9230 in English. The assistant will identify itself as automated, ask about amoxicillin 500mg stock for 21 capsules, collect the requested structured fields, ask about alternatives if unavailable, avoid ordering or committing, then thank them and end the call.",
+  "confirm_token": "cNHVAK2XC1YS8FQ3V4HJ1",
+  "confirm_expires_at": "2026-07-27T19:18:52.758090Z",
+  "expires_at": "9999-12-31T23:59:59Z"
+}

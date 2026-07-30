@@ -1,0 +1,15 @@
+{
+  "plan_id": "pX70PPR62",
+  "ready_to_run": true,
+  "next_step": "The plan is ready. If a plan card UI is present, let it continue execution and do not call `run_call` again in chat. Only call `run_call` yourself if no plan card UI is available or the user explicitly asks to start or retry the call in chat.",
+  "clarifying_questions": [],
+  "display_goal": "You are calling a pharmacy on behalf of a patient looking for a medication. Identify yourself as an automated assistant immediately, and keep the call brief and polite. Find out whether they currently have amoxicillin 500mg in stock; the patient needs 21 capsules. Capture these fields in the structured result using exactly these key names: in_stock (one of yes, no, partial, unknown), form_available (one of brand, generic, both, unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (one of yes, no, unknown), can_hold (one of yes, no, unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. On success, report the stock, pricing, prescription, hold, alternative, and notes fields. On failure or no answer, report that the pharmacy could not be reached or the requested information could not be obtained. Thank them and end the call.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "questions": [],
+  "confirm_summary": "Ready to place the call immediately to the pharmacy at ...0100 in English. The assistant will identify itself, ask about amoxicillin 500mg availability for 21 capsules, capture the requested structured fields, ask about alternatives if unavailable, avoid placing an order or committing on the patient's behalf, and report back if no one answers or the information cannot be obtained.",
+  "confirm_token": "c71T6KRG3X6CX0F77DAM3",
+  "confirm_expires_at": "2026-07-27T19:10:12.335320Z",
+  "expires_at": "9999-12-31T23:59:59Z"
+}

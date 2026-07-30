@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RxFind — find your medication, in stock, nearby</title>
+<style>
+  :root {
+    --ink: #14181d; --muted: #6b7480; --line: #e3e7ec; --bg: #f7f9fb;
+    --card: #fff; --good: #1f7a4d; --warn: #b45309; --bad: #b3261e;
+    --accent: #12507e;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width: 1000px; margin:0 auto; padding:40px 24px 80px; }
+  h1 { font-size:30px; margin:0 0 6px; letter-spacing:-0.02em; }
+  .sub { color:var(--muted); margin:0 0 34px; }
+  .card { background:var(--card); border:1px solid var(--line);
+          border-radius:14px; padding:24px; margin-bottom:22px; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.09em;
+       color:var(--muted); margin:0 0 16px; font-weight:600; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:5px; }
+  input, select { width:100%; padding:10px 12px; border:1px solid var(--line);
+                  border-radius:9px; font-size:15px; font-family:inherit; }
+  button { background:var(--ink); color:#fff; border:0; border-radius:9px;
+           padding:12px 22px; font-size:15px; font-weight:500; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:18px; }
+  .badge { font-size:12px; color:var(--muted); border:1px solid var(--line);
+           border-radius:999px; padding:4px 12px; }
+  .badge.replay { border-color:#b7d3ea; color:var(--accent); background:#eff6fc; }
+
+  .feed { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px;
+          max-height:230px; overflow-y:auto; }
+  .feed div { padding:5px 0; border-bottom:1px solid var(--line); display:flex; gap:10px; }
+  .feed .k { min-width:74px; font-weight:600; }
+  .k-start,.k-ringing,.k-replay { color:var(--accent); }
+  .k-done { color:var(--good); }
+  .k-failed,.k-blocked { color:var(--bad); }
+  .ph { color:var(--muted); min-width:120px; }
+
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.07em;
+       color:var(--muted); padding:0 8px 10px; font-weight:600; }
+  td { padding:12px 8px; border-top:1px solid var(--line); vertical-align:top; }
+  .stock { font-weight:600; font-size:13px; }
+  .s-yes { color:var(--good); } .s-partial { color:var(--warn); }
+  .s-no,.s-unknown { color:var(--muted); }
+  .price { font-variant-numeric:tabular-nums; }
+  .conf { font-size:12px; color:var(--muted); }
+  .conf.low { color:var(--warn); }
+  .note { color:var(--muted); font-size:13px; margin-top:4px; }
+  .link { color:var(--accent); cursor:pointer; font-size:13px;
+          background:none; border:0; padding:0; text-decoration:underline; }
+  pre { background:#f4f6f8; border:1px solid var(--line); border-radius:9px;
+        padding:14px; overflow-x:auto; font-size:12.5px; white-space:pre-wrap;
+        max-height:340px; }
+  .err { color:var(--bad); }
+  .empty { color:var(--muted); }
+  .evidence { margin:8px 0 0; padding-left:18px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RxFind</h1>
+  <p class="sub">Someone has to ring round the pharmacies. It doesn't have to be you.</p>
+
+  <div class="card">
+    <h2>1 · What do you need</h2>
+    <div class="grid">
+      <div><label>Medication</label><input id="drug" value="amoxicillin"></div>
+      <div><label>Dosage</label><input id="dosage" value="500mg"></div>
+      <div><label>Quantity</label><input id="quantity" value="21 capsules"></div>
+      <div><label>Region</label>
+        <select id="region">
+          <option>GB</option><option>US</option><option>KE</option><option>CA</option>
+          <option>AU</option><option>IN</option><option>SG</option><option>MY</option>
+          <option>AE</option><option>PH</option><option>ID</option><option>VN</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <button id="go">Call the pharmacies</button>
+      <span id="status" class="badge">checking…</span>
+      <span id="count" class="badge"></span>
+    </div>
+    <div id="error" class="err" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card" id="progress" style="display:none">
+    <h2>2 · Calls in progress</h2>
+    <div class="feed" id="feed"></div>
+  </div>
+
+  <div class="card" id="resultsCard" style="display:none">
+    <h2>3 · Where to go</h2>
+    <table>
+      <thead><tr>
+        <th>Pharmacy</th><th>Stock</th><th>Qty</th><th>Price</th>
+        <th>Rx</th><th>Hold</th><th>Confidence</th>
+      </tr></thead>
+      <tbody id="results"></tbody>
+    </table>
+    <div id="detail"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let timer = null, currentSearch = null;
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"]/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+}
+
+function renderFeed(activity) {
+  $("feed").innerHTML = activity.map(a => `
+    <div>
+      <span class="k k-${a.kind}">${esc(a.kind)}</span>
+      <span class="ph">${esc(a.phone)}</span>
+      <span>${esc(a.message)}</span>
+    </div>`).join("");
+  $("feed").scrollTop = $("feed").scrollHeight;
+}
+
+function fmtHold(r) {
+  if (r.can_hold !== "yes") return "—";
+  return r.hold_duration_hours ? `${Math.round(r.hold_duration_hours)}h` : "yes";
+}
+
+function renderResults(results) {
+  if (!results.length) {
+    $("results").innerHTML = `<tr><td colspan="7" class="empty">No results yet.</td></tr>`;
+    return;
+  }
+  $("results").innerHTML = results.map(r => {
+    const conf = r.confidence_score;
+    // Surface low confidence rather than burying it. A patient acting on this
+    // is about to travel somewhere.
+    const low = conf !== null && conf !== undefined && conf < 0.6;
+    return `
+    <tr>
+      <td>
+        <b>${esc(r.pharmacy_name || r.pharmacy_phone)}</b>
+        <div class="note">${esc(r.pharmacy_phone)}</div>
+        ${r.pharmacist_notes ? `<div class="note">${esc(r.pharmacist_notes)}</div>` : ""}
+        ${r.transcript ? `<button class="link" data-phone="${esc(r.pharmacy_phone)}">
+            View transcript</button>` : ""}
+      </td>
+      <td class="stock s-${esc(r.in_stock)}">${esc(r.in_stock)}</td>
+      <td>${r.quantity_available ? Math.round(r.quantity_available) : "—"}</td>
+      <td class="price">${r.unit_price != null
+          ? `${r.unit_price} ${esc(r.currency || "")}` : "—"}</td>
+      <td>${esc(r.requires_prescription)}</td>
+      <td>${fmtHold(r)}</td>
+      <td class="conf ${low ? "low" : ""}">
+        ${conf != null ? conf.toFixed(2) : "—"}
+        ${low ? " · verify" : ""}
+      </td>
+    </tr>`;
+  }).join("");
+
+  document.querySelectorAll("[data-phone]").forEach(b =>
+    b.addEventListener("click", () => showTranscript(b.dataset.phone)));
+}
+
+async function showTranscript(phone) {
+  const res = await fetch(
+    `/api/search/${currentSearch}/transcript/${encodeURIComponent(phone)}`);
+  if (!res.ok) return;
+  const d = await res.json();
+  $("detail").innerHTML = `
+    <h2 style="margin-top:26px">Evidence · ${esc(phone)}</h2>
+    <ul class="evidence">${(d.evidence || []).map(e => `<li>${esc(e)}</li>`).join("")}</ul>
+    <pre>${esc(d.transcript || "No transcript.")}</pre>`;
+  $("detail").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function poll() {
+  const res = await fetch(`/api/search/${currentSearch}`);
+  const s = await res.json();
+
+  renderFeed(s.activity);
+  renderResults(s.results);
+  $("resultsCard").style.display = s.results.length ? "block" : "none";
+  $("count").textContent = s.status === "done"
+    ? `${s.results.length} of ${s.pharmacies.length} reached`
+    : `${s.pending} call(s) outstanding`;
+
+  if (s.error) $("error").textContent = s.error;
+
+  if (s.status === "done" || s.status === "failed") {
+    clearInterval(timer);
+    $("go").disabled = false;
+    $("go").textContent = $("go").dataset.label || "Call the pharmacies";
+  }
+}
+
+async function search() {
+  $("error").textContent = "";
+  $("detail").innerHTML = "";
+  $("go").disabled = true;
+  $("go").textContent = "Calling…";
+  $("progress").style.display = "block";
+
+  try {
+    const res = await fetch("/api/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        drug: $("drug").value,
+        dosage: $("dosage").value,
+        quantity: $("quantity").value,
+        region: $("region").value,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "search failed");
+    currentSearch = data.id;
+    timer = setInterval(poll, 1200);
+    poll();
+  } catch (err) {
+    $("error").textContent = err.message;
+    $("go").disabled = false;
+    $("go").textContent = $("go").dataset.label || "Call the pharmacies";
+  }
+}
+
+$("go").addEventListener("click", search);
+
+fetch("/api/health").then(r => r.json()).then(h => {
+  const badge = $("status");
+  if (h.replay) {
+    // Say plainly that nothing will be dialled. The button shouldn't require
+    // the user to trust a mode flag they can't see.
+    badge.className = "badge replay";
+    badge.textContent = `replay · ${h.fixtures} saved call(s) · 0 spent`;
+    $("go").textContent = "Replay saved calls";
+    $("go").dataset.label = "Replay saved calls";
+    document.querySelector(".sub").innerHTML =
+      "Someone has to ring round the pharmacies. It doesn't have to be you." +
+      "<br><b>Replay mode — no phone calls will be placed.</b>";
+  } else {
+    badge.textContent = `live · ${h.calls_spent} of ${h.local_cap} cap used`;
+    $("go").dataset.label = "Call the pharmacies";
+  }
+  $("count").textContent = `${h.pharmacies} pharmacies loaded`;
+}).catch(() => {
+  $("status").textContent = "offline";
+  $("error").textContent =
+    "Can't reach the backend. Start it with: uvicorn server:app --reload";
+});
+</script>
+</body>
+</html>
