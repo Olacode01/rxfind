@@ -31,7 +31,9 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from calle_driver import BudgetExceeded, CallBudget, CalleDriver
+from calle_driver import (
+    BudgetExceeded, CallBudget, CalleDriver, InvalidPhoneNumber, validate_e164,
+)
 from rxfind import load_pharmacies, pharmacy_goal, rank, to_record
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -214,6 +216,14 @@ async def start_search(request: SearchRequest) -> JSONResponse:
     ]
     if not chosen:
         raise HTTPException(400, "No pharmacies selected.")
+
+    # Validate before anything can be dialled. A local-format number reaching
+    # the planner is how the wrong person gets called.
+    try:
+        for pharmacy in chosen:
+            pharmacy["phone"] = validate_e164(pharmacy["phone"])
+    except InvalidPhoneNumber as exc:
+        raise HTTPException(400, str(exc)) from exc
 
     search = Search(
         id=uuid.uuid4().hex[:12],

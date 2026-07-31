@@ -27,6 +27,7 @@ What this module handles that a naive client won't:
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import re
@@ -36,9 +37,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from fastmcp import Client
-from fastmcp.client.transports import StreamableHttpTransport
-
 log = logging.getLogger("calle")
 
 SERVER_URL = "https://seleven-mcp-sg.airudder.com/mcp/openagent_oauth"
@@ -47,6 +45,34 @@ TOKEN_CACHE_ROOT = Path.home() / ".calle-mcp" / "cli"
 TERMINAL_STATUSES = {"COMPLETED", "NO ANSWER", "DECLINED", "FAILED", "CANCELLED"}
 TERMINAL_ACTIONS = {"report_result", "report_blocked", "none"}
 BLOCKED_ACTIONS = {"ask_user_for_missing_info", "ask_user_for_retry_confirmation"}
+
+# E.164: a plus, a non-zero country code digit, then 7-14 more digits.
+E164_RE = re.compile(r"^\+[1-9]\d{7,14}$")
+
+
+class InvalidPhoneNumber(ValueError):
+    pass
+
+
+def validate_e164(phone: str) -> str:
+    """Reject anything that isn't E.164 before it can be dialled.
+
+    Documenting the requirement isn't enough — a local-format number silently
+    reaching the planner is how the wrong person gets called.
+    """
+    cleaned = (phone or "").strip().replace(" ", "").replace("-", "")
+    if not E164_RE.match(cleaned):
+        raise InvalidPhoneNumber(
+            f"{phone!r} is not E.164. Expected + followed by country code and "
+            f"number, 8-15 digits total, e.g. +15550100. Do not guess a "
+            f"country code — ask the user."
+        )
+    return cleaned
+
+
+def mask(phone: str) -> str:
+    """Never print a full number in a summary or log."""
+    return f"…{phone[-4:]}" if len(phone) >= 4 else "…"
 
 
 # --------------------------------------------------------------------------
@@ -133,6 +159,51 @@ class CallBudget:
 
 
 # --------------------------------------------------------------------------
+# Durable run state
+# --------------------------------------------------------------------------
+
+
+@dataclass
+class RunStore:
+    """Persisted plan and run IDs, so an interruption resumes instead of redials.
+
+    `plan_id` is CALL-E's idempotency key, but it only protects you if it
+    survives the crash. Without this, a lost response or a killed process means
+    the next invocation plans afresh and calls the same recipient a second time
+    — spending a call and bothering a real person.
+    """
+
+    path: Path = field(default=Path(".rxfind_runs.json"))
+
+    def _load(self) -> dict[str, Any]:
+        if not self.path.exists():
+            return {}
+        try:
+            return json.loads(self.path.read_text())
+        except json.JSONDecodeError:
+            return {}
+
+    @staticmethod
+    def key(phone: str, goal: str) -> str:
+        return hashlib.sha256(f"{phone}|{goal}".encode()).hexdigest()[:32]
+
+    def get(self, key: str) -> dict[str, Any]:
+        return self._load().get(key, {})
+
+    def put(self, key: str, **fields: Any) -> None:
+        data = self._load()
+        entry = data.setdefault(key, {})
+        entry.update(fields)
+        entry["updated_at"] = datetime.now(timezone.utc).isoformat()
+        self.path.write_text(json.dumps(data, indent=2))
+
+    def clear(self, key: str) -> None:
+        data = self._load()
+        data.pop(key, None)
+        self.path.write_text(json.dumps(data, indent=2))
+
+
+# --------------------------------------------------------------------------
 # Summary parsing
 # --------------------------------------------------------------------------
 
@@ -178,19 +249,37 @@ class CalleDriver:
         dry_run: bool = True,
         store_dir: Path = Path("runs"),
         server_url: str = SERVER_URL,
+        runs: RunStore | None = None,
     ) -> None:
         self.budget = budget
         self.dry_run = dry_run
         self.store_dir = store_dir
         self.store_dir.mkdir(exist_ok=True)
         self._server_url = server_url
-        self._token = load_cli_token()
+        self.runs = runs or RunStore()
 
-    def _client(self) -> Client:
+        # Credentials and the transport are only touched in live mode. A dry
+        # run must not read the token or open a socket — otherwise it leaks the
+        # recipient's number and the request context to a third party from a
+        # mode the user was told places no calls.
+        self._token: str | None = None
+        self._Client = None
+        self._Transport = None
+        if not dry_run:
+            from fastmcp import Client
+            from fastmcp.client.transports import StreamableHttpTransport
+
+            self._Client = Client
+            self._Transport = StreamableHttpTransport
+            self._token = load_cli_token()
+
+    def _client(self):
+        if self._Client is None:
+            raise RuntimeError("Driver is in dry-run mode; no client available.")
         # A fresh client per operation — sessions are cheap and this keeps
         # concurrent runs from sharing transport state.
-        return Client(
-            StreamableHttpTransport(
+        return self._Client(
+            self._Transport(
                 self._server_url, headers={"Authorization": f"Bearer {self._token}"}
             )
         )
@@ -224,7 +313,8 @@ class CalleDriver:
         plan_id: str | None = None,
         ttl_seconds: int = 0,  # 0 = retain permanently; useful as demo evidence
     ) -> dict[str, Any]:
-        """Free. No call is placed. Iterate on goal prose as much as you like."""
+        """Charges nothing, but DOES contact the server. Not part of dry run."""
+        to_phones = [validate_e164(p) for p in to_phones]
         args: dict[str, Any] = {
             "goal": goal,
             "to_phones": to_phones,
@@ -235,6 +325,12 @@ class CalleDriver:
         }
         if plan_id:
             args["plan_id"] = plan_id
+
+        if self.dry_run:
+            # Offline: print what would be sent, contact nothing.
+            log.info("DRY RUN — would plan_call for %s",
+                     ", ".join(mask(p) for p in to_phones))
+            return {"status": "DRY_RUN", "ready_to_run": False, "request": args}
 
         async with self._client() as c:
             res = self._unwrap(await c.call_tool("plan_call", args))
@@ -326,13 +422,62 @@ class CalleDriver:
     async def execute(
         self, *, goal: str, phone: str, region: str, language: str = "English",
     ) -> dict[str, Any] | None:
-        """plan -> run -> poll for a single recipient."""
-        plan = await self.plan(
-            goal=goal, to_phones=[phone], region=region, language=language
-        )
-        if not plan.get("ready_to_run"):
+        """plan -> run -> poll for a single recipient, resuming if interrupted.
+
+        A stored run_id is polled rather than re-planned. Without that, an
+        interrupted poll causes the next invocation to dial the same recipient
+        again.
+        """
+        phone = validate_e164(phone)
+
+        if self.dry_run:
+            await self.plan(goal=goal, to_phones=[phone], region=region,
+                            language=language)
             return None
+
+        key = self.runs.key(phone, goal)
+        saved = self.runs.get(key)
+
+        if saved.get("run_id"):
+            log.info("Resuming run %s for %s", saved["run_id"][:12], mask(phone))
+            final = await self.poll(saved["run_id"])
+            self.runs.clear(key)
+            return final
+
+        plan: dict[str, Any] | None = None
+        if saved.get("plan_id"):
+            try:
+                self._assert_token_fresh(saved.get("confirm_expires_at"))
+                plan = {
+                    "plan_id": saved["plan_id"],
+                    "confirm_token": saved["confirm_token"],
+                    "confirm_expires_at": saved.get("confirm_expires_at"),
+                    "ready_to_run": True,
+                }
+                log.info("Reusing plan %s for %s", saved["plan_id"], mask(phone))
+            except RuntimeError:
+                self.runs.clear(key)
+
+        if plan is None:
+            plan = await self.plan(
+                goal=goal, to_phones=[phone], region=region, language=language
+            )
+            if not plan.get("ready_to_run"):
+                return None
+            self.runs.put(
+                key,
+                plan_id=plan["plan_id"],
+                confirm_token=plan["confirm_token"],
+                confirm_expires_at=plan.get("confirm_expires_at"),
+                phone_masked=mask(phone),
+            )
+
         run = await self.run(plan, 1)
-        if not run.get("run_id"):
+        run_id = run.get("run_id")
+        if not run_id:
             return None
-        return await self.poll(run["run_id"])
+        self.runs.put(key, run_id=run_id)
+
+        final = await self.poll(run_id)
+        self.runs.clear(key)
+        return final

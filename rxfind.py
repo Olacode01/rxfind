@@ -143,48 +143,74 @@ def pharmacy_goal(drug: str, dosage: str, quantity: str) -> str:
 # --------------------------------------------------------------------------
 
 
+MIN_CONFIDENCE = 0.6
+
+
 def to_record(final: dict[str, Any], pharmacy: dict[str, str] | None = None) -> dict[str, Any]:
-    """One terminal get_call_run response -> one ranked-list row."""
+    """One terminal get_call_run response -> one ranked-list row.
+
+    Refuses to report stock fields from a call that didn't complete. A call
+    that failed, hit voicemail or was cut off can still carry a partially
+    filled summary — treating that as a stock check is how a patient gets sent
+    somewhere on the strength of a sentence nobody finished.
+    """
     result = final.get("result") or {}
     summary = result.get("summary") or result.get("post_summary") or ""
-
-    fields = parse_summary_fields(summary, ALL_KEYS)
-
-    # `extracted` is mostly a request echo, but check it for real domain keys
-    # in case that gets fixed upstream.
-    extracted = result.get("extracted") or {}
-    if isinstance(extracted, dict):
-        for k, v in extracted.items():
-            lk = str(k).lower()
-            if lk in ALL_KEYS and lk not in fields:
-                fields[lk] = v
-
-    record: dict[str, Any] = {}
-    for canonical, aliases in ALIASES.items():
-        value = next((fields[a] for a in aliases if a in fields), None)
-        if canonical in ENUMS:
-            record[canonical] = _enum(value, ENUMS[canonical])
-        elif canonical in NUMERIC:
-            record[canonical] = _number(value)
-        else:
-            record[canonical] = _text(value)
-
     outcome = result.get("outcome") or {}
-    confidence = outcome.get("completion_confidence") or {}
+    confidence = (outcome.get("completion_confidence") or {}).get("score")
+    completed = outcome.get("task_completed") is True
+    status = (final.get("status") or "").upper()
+
+    reached = completed and status == "COMPLETED"
+    verified = reached and confidence is not None and confidence >= MIN_CONFIDENCE
+
+    extracted = result.get("extracted") or {}
+
+    if reached:
+        fields = parse_summary_fields(summary, ALL_KEYS)
+        # `extracted` is mostly a request echo, but check it for real domain
+        # keys in case that gets fixed upstream.
+        if isinstance(extracted, dict):
+            for k, v in extracted.items():
+                lk = str(k).lower()
+                if lk in ALL_KEYS and lk not in fields:
+                    fields[lk] = v
+
+        record: dict[str, Any] = {}
+        for canonical, aliases in ALIASES.items():
+            value = next((fields[a] for a in aliases if a in fields), None)
+            if canonical in ENUMS:
+                record[canonical] = _enum(value, ENUMS[canonical])
+            elif canonical in NUMERIC:
+                record[canonical] = _number(value)
+            else:
+                record[canonical] = _text(value)
+    else:
+        record = {
+            name: ("unknown" if name in ENUMS else None) for name in ALIASES
+        }
+        record["pharmacist_notes"] = (
+            f"Call did not complete ({status.lower() or 'unknown status'}). "
+            f"No stock information obtained."
+        )
+
     calling = extracted.get("calling") or {} if isinstance(extracted, dict) else {}
+    confidence_label = (outcome.get("completion_confidence") or {}).get("label")
 
     record.update(
         pharmacy_name=(pharmacy or {}).get("name"),
         pharmacy_phone=(pharmacy or {}).get("phone"),
         run_status=final.get("status"),
-        task_completed=outcome.get("task_completed"),
-        confidence_score=confidence.get("score"),
-        confidence_label=confidence.get("label"),
+        task_completed=completed,
+        reached=reached,
+        verified=verified,
+        confidence_score=confidence,
+        confidence_label=confidence_label,
         evidence=outcome.get("evidence") or [],
         transcript=result.get("transcript"),
         call_id=result.get("call_id"),
         duration_seconds=calling.get("duration_seconds"),
-        raw_summary=summary,
+        raw_summary=summary if reached else "",
     )
     return record
 
@@ -197,16 +223,17 @@ _STOCK_ORDER = {"yes": 0, "partial": 1, "unknown": 2, "no": 3}
 
 
 def rank(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """In-stock first, then cheapest, then whoever will hold it.
+    """Verified results first, then stock, then cheapest, then hold.
 
-    Low-confidence results sink: a confident "no" is more useful to a patient
-    than an unreliable "yes" that wastes a trip.
+    Verification outranks stock status deliberately. Sorting on stock first
+    lets a low-confidence "yes" sit above a high-confidence "no" — which is
+    precisely the failure that sends someone across town while unwell. A
+    reliable negative beats an unreliable positive.
     """
     def key(r: dict[str, Any]):
-        confidence = r.get("confidence_score")
         return (
+            0 if r.get("verified") else 1,
             _STOCK_ORDER.get(r.get("in_stock"), 3),
-            0 if (confidence is None or confidence >= 0.6) else 1,
             r["unit_price"] if r.get("unit_price") is not None else float("inf"),
             0 if r.get("can_hold") == "yes" else 1,
         )
@@ -224,6 +251,10 @@ def render(records: list[dict[str, Any]]) -> str:
         if r.get("can_hold") == "yes":
             hours = r.get("hold_duration_hours")
             hold = f"{hours:.0f}h" if hours else "yes"
+        conf = (f"{r['confidence_score']:.2f}"
+                if r.get("confidence_score") is not None else "—")
+        if not r.get("verified"):
+            conf += " !"     # unverified — never presented as fact
         rows.append([
             str(i),
             (r.get("pharmacy_name") or r.get("pharmacy_phone") or "?")[:24],
@@ -232,7 +263,7 @@ def render(records: list[dict[str, Any]]) -> str:
             f"{price:g} {currency}".strip() if price is not None else "—",
             r.get("requires_prescription") or "unknown",
             hold,
-            f"{r['confidence_score']:.2f}" if r.get("confidence_score") is not None else "—",
+            conf,
         ])
 
     widths = [max(len(h), *(len(row[i]) for row in rows)) if rows else len(h)
