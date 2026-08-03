@@ -27,11 +27,15 @@ What this module handles that a naive client won't:
 from __future__ import annotations
 
 import asyncio
+import fcntl
 import hashlib
 import json
 import logging
+import os
 import re
+import tempfile
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -163,44 +167,167 @@ class CallBudget:
 # --------------------------------------------------------------------------
 
 
+class StateCorrupted(RuntimeError):
+    """The run ledger could not be read. Refuse to proceed rather than start
+    from a blank slate, which would redial everything in flight."""
+
+
+class RunLocked(RuntimeError):
+    """Another live process holds this recipient."""
+
+
+class AmbiguousRun(RuntimeError):
+    """run_call was sent but no run_id was recorded, so whether the phone rang
+    is unknown. Must not be retried automatically."""
+
+
 @dataclass
 class RunStore:
-    """Persisted plan and run IDs, so an interruption resumes instead of redials.
+    """Crash-safe, concurrency-safe ledger of in-flight calls.
 
-    `plan_id` is CALL-E's idempotency key, but it only protects you if it
-    survives the crash. Without this, a lost response or a killed process means
-    the next invocation plans afresh and calls the same recipient a second time
-    — spending a call and bothering a real person.
+    Losing this state means redialling a real person, so the failure modes
+    matter more than the happy path: locked read-modify-write, atomic writes,
+    loud failure on corruption, terminal result recorded before the entry is
+    retired, and an ambiguous create that is never retried automatically.
+
+    States: planned -> dialing -> running -> done
     """
 
     path: Path = field(default=Path(".rxfind_runs.json"))
 
-    def _load(self) -> dict[str, Any]:
+    @contextmanager
+    def _locked(self):
+        lock_path = self.path.with_name(self.path.name + ".lock")
+        fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
+        finally:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+            os.close(fd)
+
+    def _read(self) -> dict[str, Any]:
         if not self.path.exists():
             return {}
-        try:
-            return json.loads(self.path.read_text())
-        except json.JSONDecodeError:
+        text = self.path.read_text()
+        if not text.strip():
             return {}
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as exc:
+            quarantine = self.path.with_name(
+                f"{self.path.name}.corrupt.{int(time.time())}"
+            )
+            self.path.rename(quarantine)
+            raise StateCorrupted(
+                f"Run ledger {self.path} is unreadable and has been moved to "
+                f"{quarantine}. Refusing to continue: treating a corrupt "
+                f"ledger as empty would redial every in-flight recipient."
+            ) from exc
+
+    def _write(self, data: dict[str, Any]) -> None:
+        fd, tmp = tempfile.mkstemp(dir=str(self.path.parent or "."), suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w") as handle:
+                json.dump(data, handle, indent=2)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp, self.path)
+        except BaseException:
+            Path(tmp).unlink(missing_ok=True)
+            raise
 
     @staticmethod
     def key(phone: str, goal: str) -> str:
         return hashlib.sha256(f"{phone}|{goal}".encode()).hexdigest()[:32]
 
+    @staticmethod
+    def _alive(pid: int | None) -> bool:
+        if not pid or pid == os.getpid():
+            return pid == os.getpid()
+        try:
+            os.kill(pid, 0)
+        except (ProcessLookupError, PermissionError, OSError):
+            return False
+        return True
+
+    def claim(self, key: str, phone_masked: str) -> dict[str, Any]:
+        """Atomically take ownership, or surface why we must not dial."""
+        with self._locked():
+            data = self._read()
+            entry = data.get(key)
+
+            if entry is None:
+                entry = {
+                    "state": "planned",
+                    "pid": os.getpid(),
+                    "phone_masked": phone_masked,
+                    "claimed_at": datetime.now(timezone.utc).isoformat(),
+                }
+                data[key] = entry
+                self._write(data)
+                return entry
+
+            if entry.get("state") == "dialing":
+                raise AmbiguousRun(
+                    f"{phone_masked}: a call was submitted but no run id was "
+                    f"recorded, so whether the phone rang is unknown. Not "
+                    f"retrying automatically. Check plan "
+                    f"{entry.get('plan_id')}, then record the run id or remove "
+                    f"this entry to allow a redial."
+                )
+
+            owner = entry.get("pid")
+            if (
+                entry.get("state") in {"planned", "running"}
+                and owner != os.getpid()
+                and self._alive(owner)
+            ):
+                raise RunLocked(
+                    f"{phone_masked}: held by live process {owner}. "
+                    f"Not dialling concurrently."
+                )
+
+            entry["pid"] = os.getpid()
+            data[key] = entry
+            self._write(data)
+            return entry
+
+    def update(self, key: str, **fields: Any) -> None:
+        with self._locked():
+            data = self._read()
+            entry = data.setdefault(key, {})
+            entry.update(fields)
+            entry["updated_at"] = datetime.now(timezone.utc).isoformat()
+            self._write(data)
+
+    def mark_done(self, key: str, result_path: str | None = None) -> None:
+        """Record completion — only after the terminal result is durable."""
+        self.update(key, state="done", result_path=result_path,
+                    completed_at=datetime.now(timezone.utc).isoformat())
+
+    def prune_done(self) -> int:
+        with self._locked():
+            data = self._read()
+            stale = [k for k, v in data.items() if v.get("state") == "done"]
+            for k in stale:
+                data.pop(k)
+            if stale:
+                self._write(data)
+            return len(stale)
+
     def get(self, key: str) -> dict[str, Any]:
-        return self._load().get(key, {})
+        with self._locked():
+            return self._read().get(key, {})
 
-    def put(self, key: str, **fields: Any) -> None:
-        data = self._load()
-        entry = data.setdefault(key, {})
-        entry.update(fields)
-        entry["updated_at"] = datetime.now(timezone.utc).isoformat()
-        self.path.write_text(json.dumps(data, indent=2))
-
-    def clear(self, key: str) -> None:
-        data = self._load()
-        data.pop(key, None)
-        self.path.write_text(json.dumps(data, indent=2))
+    def release(self, key: str) -> None:
+        """Drop a claim that never reached `dialing`. Safe: nothing was sent."""
+        with self._locked():
+            data = self._read()
+            entry = data.get(key)
+            if entry and entry.get("state") == "planned" and not entry.get("run_id"):
+                data.pop(key)
+                self._write(data)
 
 
 # --------------------------------------------------------------------------
@@ -327,10 +454,16 @@ class CalleDriver:
             args["plan_id"] = plan_id
 
         if self.dry_run:
-            # Offline: print what would be sent, contact nothing.
+            # Offline: print what would be sent, contact nothing. Numbers are
+            # masked here too — terminal output ends up in scrollback, CI logs
+            # and screen recordings.
             log.info("DRY RUN — would plan_call for %s",
                      ", ".join(mask(p) for p in to_phones))
-            return {"status": "DRY_RUN", "ready_to_run": False, "request": args}
+            return {
+                "status": "DRY_RUN",
+                "ready_to_run": False,
+                "request": {**args, "to_phones": [mask(p) for p in to_phones]},
+            }
 
         async with self._client() as c:
             res = self._unwrap(await c.call_tool("plan_call", args))
@@ -436,12 +569,15 @@ class CalleDriver:
             return None
 
         key = self.runs.key(phone, goal)
-        saved = self.runs.get(key)
+        # Atomic claim. Raises RunLocked if another live process holds this
+        # recipient, or AmbiguousRun if a previous attempt left a create whose
+        # outcome is unknown.
+        saved = self.runs.claim(key, mask(phone))
 
         if saved.get("run_id"):
             log.info("Resuming run %s for %s", saved["run_id"][:12], mask(phone))
             final = await self.poll(saved["run_id"])
-            self.runs.clear(key)
+            self.runs.mark_done(key, self._persist("result", final).name)
             return final
 
         plan: dict[str, Any] | None = None
@@ -456,28 +592,37 @@ class CalleDriver:
                 }
                 log.info("Reusing plan %s for %s", saved["plan_id"], mask(phone))
             except RuntimeError:
-                self.runs.clear(key)
+                plan = None   # expired token; re-plan below. Nothing was dialled.
 
         if plan is None:
             plan = await self.plan(
                 goal=goal, to_phones=[phone], region=region, language=language
             )
             if not plan.get("ready_to_run"):
+                self.runs.release(key)      # nothing was dialled
                 return None
-            self.runs.put(
+            self.runs.update(
                 key,
                 plan_id=plan["plan_id"],
                 confirm_token=plan["confirm_token"],
                 confirm_expires_at=plan.get("confirm_expires_at"),
-                phone_masked=mask(phone),
             )
+
+        # Mark "dialing" BEFORE run_call. If the response is lost, the ledger
+        # already records that a call may have gone out, and claim() refuses to
+        # retry rather than risk a second ring.
+        self.runs.update(key, state="dialing")
 
         run = await self.run(plan, 1)
         run_id = run.get("run_id")
         if not run_id:
+            log.error("%s: no run id returned — left ambiguous, will not "
+                      "auto-retry", mask(phone))
             return None
-        self.runs.put(key, run_id=run_id)
+        self.runs.update(key, state="running", run_id=run_id)
 
         final = await self.poll(run_id)
-        self.runs.clear(key)
+        # Result durable first, ledger retired second. The other order loses
+        # both if the process dies in between.
+        self.runs.mark_done(key, self._persist("result", final).name)
         return final

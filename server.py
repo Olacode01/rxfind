@@ -32,7 +32,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from calle_driver import (
-    BudgetExceeded, CallBudget, CalleDriver, InvalidPhoneNumber, validate_e164,
+    AmbiguousRun, BudgetExceeded, CallBudget, CalleDriver, InvalidPhoneNumber,
+    RunLocked, StateCorrupted, validate_e164,
 )
 from rxfind import load_pharmacies, pharmacy_goal, rank, to_record
 
@@ -169,6 +170,11 @@ async def run_search(search: Search) -> None:
                     phone, "done",
                     f"{pharmacy['name']}: in_stock={record.get('in_stock')}",
                 )
+            except (AmbiguousRun, RunLocked, StateCorrupted) as exc:
+                # These exist to prevent a redial. Surface them as-is rather
+                # than as generic failures — the message tells the user what
+                # to do.
+                search.log(phone, "blocked", str(exc))
             except Exception as exc:
                 log.exception("call failed")
                 search.log(phone, "failed", f"{type(exc).__name__}: {exc}")

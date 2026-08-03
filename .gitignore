@@ -5,8 +5,15 @@ __pycache__/
 # macOS
 .DS_Store
 
-# Local call ledger — state, not code
+# Local call ledgers — state, not code.
+# These contain confirm_tokens, which authorise placing a call. Never commit.
 .rxfind_budget.json
+.rxfind_runs.json*
+.pharmacy_budget.json
+.pharmacy_runs.json*
+
+# Terminal run dumps written next to the skill script at runtime
+contrib/skills/*/scripts/run_*.json
 
 # Superseded by calle_driver.py + rxfind.py
 calle_mcp_client.py
