@@ -12,8 +12,11 @@ __pycache__/
 .pharmacy_budget.json
 .pharmacy_runs.json*
 
-# Terminal run dumps written next to the skill script at runtime
+# Terminal run dumps — contain call transcripts. Written 0600 to a dedicated
+# directory; never commit new ones without sanitising phone numbers first.
+call_runs/
 contrib/skills/*/scripts/run_*.json
+contrib/skills/*/scripts/call_runs/
 
 # Superseded by calle_driver.py + rxfind.py
 calle_mcp_client.py

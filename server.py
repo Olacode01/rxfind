@@ -223,6 +223,15 @@ async def start_search(request: SearchRequest) -> JSONResponse:
     if not chosen:
         raise HTTPException(400, "No pharmacies selected.")
 
+    # Collapse duplicate recipients. Rows are dispatched concurrently, so the
+    # same number listed twice would ring one pharmacist twice within a second.
+    deduped: dict[str, dict[str, str]] = {}
+    for pharmacy in chosen:
+        deduped.setdefault(pharmacy["phone"], pharmacy)
+    if len(deduped) < len(chosen):
+        log.warning("Skipped %s duplicate row(s)", len(chosen) - len(deduped))
+    chosen = list(deduped.values())
+
     # Validate before anything can be dialled. A local-format number reaching
     # the planner is how the wrong person gets called.
     try:
