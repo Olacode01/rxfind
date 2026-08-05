@@ -33,6 +33,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 import tempfile
 import time
 from contextlib import contextmanager
@@ -45,6 +46,11 @@ log = logging.getLogger("calle")
 
 SERVER_URL = "https://seleven-mcp-sg.airudder.com/mcp/openagent_oauth"
 TOKEN_CACHE_ROOT = Path.home() / ".calle-mcp" / "cli"
+
+# Bump when the run-identity scheme changes. An older ledger's keys won't match
+# anything we compute, so unfinished entries must be refused rather than read as
+# absent — "absent" means "dial them again".
+LEDGER_SCHEMA = 2
 
 TERMINAL_STATUSES = {"COMPLETED", "NO ANSWER", "DECLINED", "FAILED", "CANCELLED"}
 TERMINAL_ACTIONS = {"report_result", "report_blocked", "none"}
@@ -104,15 +110,34 @@ def _endpoint_of(data: dict[str, Any]) -> str | None:
     return None
 
 
-def load_cli_token(server_url: str = SERVER_URL) -> str:
-    """Select the CLI token bound to the endpoint we are about to call.
+def _cli_auth_status() -> dict[str, Any] | None:
+    """Ask the CALL-E CLI which cache belongs to which endpoint.
 
-    More than one cache can exist — a second account, a different environment,
-    a stale login. Taking whichever sorts last silently authenticates as the
-    wrong account, which here means calling from the wrong number and billing
-    the wrong balance. Refuse rather than guess.
+    Authoritative, rather than reverse-engineering the cache directory hash.
+    """
+    try:
+        result = subprocess.run(
+            ["calle", "auth", "status"],
+            capture_output=True, text=True, timeout=15, check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return None
+    if result.returncode != 0:
+        return None
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return None
 
-    Override with CALLE_TOKEN_CACHE=/path/to/token.json
+
+def resolve_credential(server_url: str = SERVER_URL) -> tuple[str, str]:
+    """Return (access_token, account_namespace) for `server_url`, or refuse.
+
+    A bearer token is issued for one origin. Sending it anywhere else hands a
+    working credential to a party it was never meant for — so an unbound cache
+    is not "probably fine", it's an unknown recipient. A single cache with no
+    endpoint recorded is NOT accepted: "only one" is not evidence it belongs to
+    this provider.
     """
     override = os.environ.get("CALLE_TOKEN_CACHE")
     if override:
@@ -120,7 +145,31 @@ def load_cli_token(server_url: str = SERVER_URL) -> str:
         token = _extract_token(json.loads(path.read_text()))
         if not token:
             raise RuntimeError(f"No access token in {path}")
-        return token
+        return token, os.environ.get("CALLE_ACCOUNT_NS") or path.parent.name
+
+    status = _cli_auth_status()
+    if status:
+        cli_endpoint = status.get("server_url")
+        cache_path = status.get("cache_path")
+        if cli_endpoint and cli_endpoint != server_url:
+            raise RuntimeError(
+                f"The CALL-E CLI is authenticated against {cli_endpoint}, but "
+                f"this app is configured to call {server_url}. Refusing to send "
+                f"that credential to a different origin. Re-run `calle auth "
+                f"login` against the intended endpoint, or set "
+                f"CALLE_TOKEN_CACHE deliberately."
+            )
+        if cli_endpoint == server_url and cache_path:
+            path = Path(cache_path).expanduser()
+            if not status.get("usable", True):
+                raise RuntimeError(
+                    f"CALL-E CLI reports its cached credential is not usable "
+                    f"({path}). Run: calle auth login"
+                )
+            token = _extract_token(json.loads(path.read_text()))
+            if not token:
+                raise RuntimeError(f"No access token in {path}")
+            return token, path.parent.name
 
     candidates = sorted(TOKEN_CACHE_ROOT.glob("*/token.json"))
     if not candidates:
@@ -138,26 +187,27 @@ def load_cli_token(server_url: str = SERVER_URL) -> str:
     bound = [(p, d) for p, d in parsed if _endpoint_of(d) == server_url]
     if len(bound) == 1:
         token = _extract_token(bound[0][1])
-        if token:
-            return token
+        if not token:
+            raise RuntimeError(f"No access token in {bound[0][0]}")
+        return token, bound[0][0].parent.name
     if len(bound) > 1:
         raise RuntimeError(
             f"{len(bound)} cached tokens claim endpoint {server_url}. Set "
             f"CALLE_TOKEN_CACHE to the intended one."
         )
 
-    if len(parsed) == 1:
-        token = _extract_token(parsed[0][1])
-        if token:
-            return token
-        raise RuntimeError(f"No access token in {parsed[0][0]}")
-
     raise RuntimeError(
-        f"{len(parsed)} cached CALL-E tokens found and none records the "
-        f"endpoint {server_url}, so the correct account cannot be determined. "
-        f"Refusing to guess — calls would be billed from whichever cache sorts "
-        f"last. Set CALLE_TOKEN_CACHE, or run `calle auth login`."
+        f"Found {len(parsed)} cached CALL-E credential(s), none of which can be "
+        f"bound to {server_url}. `calle auth status` did not report a matching "
+        f"endpoint and no cache records one. A bearer token is issued for a "
+        f"single origin, so sending one that might belong to a different "
+        f"provider is a credential disclosure, not a routing mistake. Run "
+        f"`calle auth login` against {server_url}, or set CALLE_TOKEN_CACHE."
     )
+
+
+def load_cli_token(server_url: str = SERVER_URL) -> str:
+    return resolve_credential(server_url)[0]
 
 
 # --------------------------------------------------------------------------
@@ -302,6 +352,11 @@ class RunStore:
 
     path: Path = field(default=Path(".rxfind_runs.json"))
 
+    # Everything that changes what a call actually is. A plan created under a
+    # different endpoint, account or region is not the same pending action.
+    server_url: str = SERVER_URL
+    account_ns: str = "unknown"
+
     # Keys in flight in THIS process. The file lock stops two processes
     # racing; it does nothing about two coroutines in one process, because
     # they share a pid. Duplicate rows dispatched concurrently would otherwise
@@ -320,7 +375,7 @@ class RunStore:
         if not text.strip():
             return {}
         try:
-            return json.loads(text)
+            raw = json.loads(text)
         except json.JSONDecodeError as exc:
             quarantine = self.path.with_name(
                 f"{self.path.name}.corrupt.{int(time.time())}"
@@ -332,13 +387,50 @@ class RunStore:
                 f"ledger as empty would redial every in-flight recipient."
             ) from exc
 
-    def _write(self, data: dict[str, Any]) -> None:
-        # 0600: holds confirm_tokens, which authorise placing a call.
-        _write_private(self.path, json.dumps(data, indent=2))
+        schema = raw.get("schema")
+        entries = raw.get("entries")
+        if schema == LEDGER_SCHEMA and isinstance(entries, dict):
+            return entries
 
-    @staticmethod
-    def key(phone: str, goal: str) -> str:
-        return hashlib.sha256(f"{phone}|{goal}".encode()).hexdigest()[:32]
+        # Older ledgers keyed entries differently, so their keys won't match
+        # anything we compute now — every in-flight call would look absent, and
+        # absent means dial again. Migrate only if nothing is pending.
+        legacy = entries if isinstance(entries, dict) else raw
+        pending = {
+            k: v for k, v in legacy.items()
+            if isinstance(v, dict) and v.get("state") != "done"
+        }
+        if pending:
+            raise StateCorrupted(
+                f"Run ledger {self.path} uses an older identity scheme "
+                f"(schema {schema!r}, now {LEDGER_SCHEMA}) and still holds "
+                f"{len(pending)} unfinished entr"
+                f"{'y' if len(pending) == 1 else 'ies'}. Keys are now namespaced "
+                f"by endpoint, account and region, so those entries would not be "
+                f"found and their recipients would be dialled again. Let the "
+                f"in-flight calls finish, or remove the file deliberately."
+            )
+        return {}
+
+    def _write(self, entries: dict[str, Any]) -> None:
+        # 0600: holds confirm_tokens, which authorise placing a call.
+        _write_private(self.path, json.dumps(
+            {"schema": LEDGER_SCHEMA, "entries": entries}, indent=2
+        ))
+
+    def key(self, phone: str, goal: str, region: str) -> str:
+        """Identity of a pending call, across every dimension that changes it.
+
+        Phone and goal alone are not enough: the same number and question routed
+        through a different region is a different call, and under a different
+        account or endpoint it's a different plan entirely. Reusing across those
+        boundaries resurrects a stale plan; failing to match a live one dials the
+        recipient again.
+        """
+        material = "|".join([
+            self.server_url, self.account_ns, region.upper(), phone, goal,
+        ])
+        return hashlib.sha256(material.encode()).hexdigest()[:32]
 
     @staticmethod
     def _alive(pid: int | None) -> bool:
@@ -350,7 +442,7 @@ class RunStore:
             return False
         return True
 
-    def claim(self, key: str, phone_masked: str) -> dict[str, Any]:
+    def claim(self, key: str, phone_masked: str, region: str = "") -> dict[str, Any]:
         """Atomically take ownership, or surface why we must not dial."""
         if key in self._active:
             raise RunLocked(
@@ -366,6 +458,11 @@ class RunStore:
                     "state": "planned",
                     "pid": os.getpid(),
                     "phone_masked": phone_masked,
+                    # Recorded so a human inspecting a stuck entry can see
+                    # which configuration it belongs to.
+                    "server_url": self.server_url,
+                    "account_ns": self.account_ns,
+                    "region": region,
                     "claimed_at": datetime.now(timezone.utc).isoformat(),
                 }
                 data[key] = entry
@@ -506,7 +603,11 @@ class CalleDriver:
 
             self._Client = Client
             self._Transport = StreamableHttpTransport
-            self._token = load_cli_token()
+            # Resolving the credential also tells us which account we're acting
+            # as, which is part of a call's identity.
+            self._token, account_ns = resolve_credential(self._server_url)
+            self.runs.server_url = self._server_url
+            self.runs.account_ns = account_ns
 
     def _client(self):
         if self._Client is None:
@@ -679,11 +780,11 @@ class CalleDriver:
                             language=language)
             return None
 
-        key = self.runs.key(phone, goal)
+        key = self.runs.key(phone, goal, region)
         # Atomic claim. Raises RunLocked if another live process holds this
         # recipient, or AmbiguousRun if a previous attempt left a create whose
         # outcome is unknown.
-        saved = self.runs.claim(key, mask(phone))
+        saved = self.runs.claim(key, mask(phone), region)
 
         if saved.get("run_id"):
             log.info("Resuming run %s for %s", saved["run_id"][:12], mask(phone))
