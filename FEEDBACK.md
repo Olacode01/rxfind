@@ -179,6 +179,44 @@ times. `next_cursor` exists in the schema but wasn't populated.
 
 ---
 
+## 8. The credential cache records the endpoint but not the account
+
+**Severity:** Medium — blocks safe resumption of interrupted work
+
+**Observed cache contents** (`~/.calle-mcp/cli/<hash>/token.json`):
+
+```
+server_url, auth_base_url, issued_at, expires_at, token
+```
+
+**What works:** `server_url` being present is genuinely useful. It lets a client
+bind a credential to the origin it was issued for and refuse to send it
+elsewhere, without reverse-engineering the cache directory hash.
+
+**What's missing:** nothing identifies the *account*. The cache directory is
+derived from the server URL, so re-authenticating as a different account on the
+same endpoint reuses the same directory. And the token is opaque — it contains
+dots but the payload isn't base64 JSON, so there's no subject claim to fall back
+on.
+
+**Why it matters:** any workflow that persists in-flight state across a crash
+has to answer "is this pending action mine?" before resuming it. Without an
+account identifier there is no safe answer. Resuming could act on another
+account's run; assuming no run exists could place a duplicate call to a real
+person. The only correct behaviour is to fail closed — which means interrupted
+work can't be resumed automatically at all.
+
+In this skill that turns a working feature into one requiring a manual
+`CALLE_ACCOUNT_ID` environment variable.
+
+**Suggested fix:** record an account identifier alongside `server_url` in the
+cache — an account id, user id, or the login email would each be sufficient.
+Alternatively, expose it via `calle auth status`, which already reports
+`server_url` and `cache_path`. Either would let clients namespace durable state
+correctly instead of failing closed.
+
+---
+
 ## Template for further entries
 
 ## N. <title>
