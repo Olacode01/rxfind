@@ -27,6 +27,7 @@ What this module handles that a naive client won't:
 from __future__ import annotations
 
 import asyncio
+import base64
 import fcntl
 import hashlib
 import json
@@ -50,7 +51,7 @@ TOKEN_CACHE_ROOT = Path.home() / ".calle-mcp" / "cli"
 # Bump when the run-identity scheme changes. An older ledger's keys won't match
 # anything we compute, so unfinished entries must be refused rather than read as
 # absent — "absent" means "dial them again".
-LEDGER_SCHEMA = 2
+LEDGER_SCHEMA = 3
 
 TERMINAL_STATUSES = {"COMPLETED", "NO ANSWER", "DECLINED", "FAILED", "CANCELLED"}
 TERMINAL_ACTIONS = {"report_result", "report_blocked", "none"}
@@ -110,6 +111,50 @@ def _endpoint_of(data: dict[str, Any]) -> str | None:
     return None
 
 
+def _jwt_claims(token: str) -> dict[str, Any]:
+    """Read a JWT payload without verifying it.
+
+    Verification is the server's job — we only want a stable identifier for the
+    account. Never used for an authorisation decision.
+    """
+    parts = token.split(".")
+    if len(parts) != 3:
+        return {}
+    try:
+        padded = parts[1] + "=" * (-len(parts[1]) % 4)
+        return json.loads(base64.urlsafe_b64decode(padded))
+    except Exception:
+        return {}
+
+
+def _principal_of(token: str, cache: dict[str, Any]) -> str | None:
+    """A stable identity for the authenticated account, or None.
+
+    Deliberately NOT the credential cache directory: CALL-E derives that from
+    the server URL, so re-authenticating as a different account on the same
+    endpoint reuses it — and an account-A run could be resumed with account-B
+    credentials.
+    """
+    override = os.environ.get("CALLE_ACCOUNT_ID")
+    if override:
+        return override.strip()
+    for key in ("account_id", "accountId", "user_id", "userId", "sub",
+                "principal", "email", "account"):
+        value = cache.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        if isinstance(value, dict):
+            for inner in ("id", "sub", "email"):
+                if isinstance(value.get(inner), str):
+                    return value[inner].strip()
+    claims = _jwt_claims(token)
+    for key in ("sub", "account_id", "uid", "email", "client_id"):
+        value = claims.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
 def _cli_auth_status() -> dict[str, Any] | None:
     """Ask the CALL-E CLI which cache belongs to which endpoint.
 
@@ -130,7 +175,7 @@ def _cli_auth_status() -> dict[str, Any] | None:
         return None
 
 
-def resolve_credential(server_url: str = SERVER_URL) -> tuple[str, str]:
+def resolve_credential(server_url: str = SERVER_URL) -> tuple[str, str | None]:
     """Return (access_token, account_namespace) for `server_url`, or refuse.
 
     A bearer token is issued for one origin. Sending it anywhere else hands a
@@ -145,7 +190,7 @@ def resolve_credential(server_url: str = SERVER_URL) -> tuple[str, str]:
         token = _extract_token(json.loads(path.read_text()))
         if not token:
             raise RuntimeError(f"No access token in {path}")
-        return token, os.environ.get("CALLE_ACCOUNT_NS") or path.parent.name
+        return token, _principal_of(token, json.loads(path.read_text()))
 
     status = _cli_auth_status()
     if status:
@@ -166,10 +211,11 @@ def resolve_credential(server_url: str = SERVER_URL) -> tuple[str, str]:
                     f"CALL-E CLI reports its cached credential is not usable "
                     f"({path}). Run: calle auth login"
                 )
-            token = _extract_token(json.loads(path.read_text()))
+            cache = json.loads(path.read_text())
+            token = _extract_token(cache)
             if not token:
                 raise RuntimeError(f"No access token in {path}")
-            return token, path.parent.name
+            return token, _principal_of(token, cache)
 
     candidates = sorted(TOKEN_CACHE_ROOT.glob("*/token.json"))
     if not candidates:
@@ -189,7 +235,7 @@ def resolve_credential(server_url: str = SERVER_URL) -> tuple[str, str]:
         token = _extract_token(bound[0][1])
         if not token:
             raise RuntimeError(f"No access token in {bound[0][0]}")
-        return token, bound[0][0].parent.name
+        return token, _principal_of(token, bound[0][1])
     if len(bound) > 1:
         raise RuntimeError(
             f"{len(bound)} cached tokens claim endpoint {server_url}. Set "
@@ -333,6 +379,11 @@ class RunLocked(RuntimeError):
     """Another live process holds this recipient."""
 
 
+class ConfigurationMismatch(RuntimeError):
+    """An unresolved call exists under provider configuration we can't
+    reconcile against. Neither resumable nor safe to redial."""
+
+
 class AmbiguousRun(RuntimeError):
     """run_call was sent but no run_id was recorded, so whether the phone rang
     is unknown. Must not be retried automatically."""
@@ -355,7 +406,7 @@ class RunStore:
     # Everything that changes what a call actually is. A plan created under a
     # different endpoint, account or region is not the same pending action.
     server_url: str = SERVER_URL
-    account_ns: str = "unknown"
+    principal: str | None = None
 
     # Keys in flight in THIS process. The file lock stops two processes
     # racing; it does nothing about two coroutines in one process, because
@@ -418,19 +469,25 @@ class RunStore:
             {"schema": LEDGER_SCHEMA, "entries": entries}, indent=2
         ))
 
-    def key(self, phone: str, goal: str, region: str) -> str:
-        """Identity of a pending call, across every dimension that changes it.
+    @staticmethod
+    def claim_key(phone: str, goal: str) -> str:
+        """Exclusion identity: who we are calling, and what about.
 
-        Phone and goal alone are not enough: the same number and question routed
-        through a different region is a different call, and under a different
-        account or endpoint it's a different plan entirely. Reusing across those
-        boundaries resurrects a stale plan; failing to match a live one dials the
-        recipient again.
+        Deliberately free of provider configuration. This answers "is there an
+        unresolved call to this person about this thing?", and that must have
+        the same answer regardless of endpoint, account or region — otherwise
+        changing one makes a live call invisible and permits a second dial.
         """
-        material = "|".join([
-            self.server_url, self.account_ns, region.upper(), phone, goal,
-        ])
-        return hashlib.sha256(material.encode()).hexdigest()[:32]
+        return hashlib.sha256(f"{phone}|{goal}".encode()).hexdigest()[:32]
+
+    def attempt_config(self, region: str) -> dict[str, Any]:
+        """The provider configuration a call is made under. Nested under the
+        claim, compared on resume, never mixed into the claim key."""
+        return {
+            "endpoint": self.server_url,
+            "principal": self.principal,
+            "region": region.upper(),
+        }
 
     @staticmethod
     def _alive(pid: int | None) -> bool:
@@ -443,12 +500,13 @@ class RunStore:
         return True
 
     def claim(self, key: str, phone_masked: str, region: str = "") -> dict[str, Any]:
-        """Atomically take ownership, or surface why we must not dial."""
+        """Take the exclusion claim for a recipient, or explain why we can't."""
         if key in self._active:
             raise RunLocked(
                 f"{phone_masked}: already in flight in this process. Duplicate "
                 f"entries for the same recipient and goal are not dialled twice."
             )
+        wanted = self.attempt_config(region)
         with self._locked():
             data = self._read()
             entry = data.get(key)
@@ -460,9 +518,7 @@ class RunStore:
                     "phone_masked": phone_masked,
                     # Recorded so a human inspecting a stuck entry can see
                     # which configuration it belongs to.
-                    "server_url": self.server_url,
-                    "account_ns": self.account_ns,
-                    "region": region,
+                    "attempt": wanted,
                     "claimed_at": datetime.now(timezone.utc).isoformat(),
                 }
                 data[key] = entry
@@ -475,8 +531,36 @@ class RunStore:
                     f"{phone_masked}: a call was submitted but no run id was "
                     f"recorded, so whether the phone rang is unknown. Not "
                     f"retrying automatically. Check plan "
-                    f"{entry.get('plan_id')}, then record the run id or remove "
+                    f"{(entry.get('attempt') or {}).get('plan_id')}, then record "
+                    f"the run id or remove "
                     f"this entry to allow a redial."
+                )
+
+            stored = entry.get("attempt") or {}
+            mismatch = {
+                f: (stored.get(f), wanted.get(f))
+                for f in ("endpoint", "principal", "region")
+                if stored.get(f) != wanted.get(f)
+            }
+            if mismatch:
+                detail = "; ".join(
+                    f"{k}: pending={was!r} now={now!r}"
+                    for k, (was, now) in mismatch.items()
+                )
+                raise ConfigurationMismatch(
+                    f"{phone_masked}: an unresolved call exists for this "
+                    f"recipient and goal, but it was made under a different "
+                    f"configuration ({detail}). Not resuming — a plan or run id "
+                    f"from one endpoint or account is meaningless under another. "
+                    f"Not redialling either — the earlier call may still be live."
+                )
+
+            if self.principal is None:
+                raise ConfigurationMismatch(
+                    f"{phone_masked}: an unresolved call exists, but the "
+                    f"authenticated account could not be identified, so it "
+                    f"cannot be confirmed as ours. Failing closed. Set "
+                    f"CALLE_ACCOUNT_ID, or resolve the entry deliberately."
                 )
 
             owner = entry.get("pid")
@@ -497,9 +581,16 @@ class RunStore:
             return entry
 
     def update(self, key: str, **fields: Any) -> None:
+        """Update the entry. Attempt-scoped fields nest, they don't flatten."""
+        attempt_fields = {
+            k: fields.pop(k) for k in list(fields)
+            if k in {"plan_id", "confirm_token", "confirm_expires_at", "run_id"}
+        }
         with self._locked():
             data = self._read()
             entry = data.setdefault(key, {})
+            if attempt_fields:
+                entry.setdefault("attempt", {}).update(attempt_fields)
             entry.update(fields)
             entry["updated_at"] = datetime.now(timezone.utc).isoformat()
             self._write(data)
@@ -529,7 +620,8 @@ class RunStore:
         with self._locked():
             data = self._read()
             entry = data.get(key)
-            if entry and entry.get("state") == "planned" and not entry.get("run_id"):
+            attempt = (entry or {}).get("attempt") or {}
+            if entry and entry.get("state") == "planned" and not attempt.get("run_id"):
                 data.pop(key)
                 self._write(data)
         self._active.discard(key)
@@ -605,9 +697,15 @@ class CalleDriver:
             self._Transport = StreamableHttpTransport
             # Resolving the credential also tells us which account we're acting
             # as, which is part of a call's identity.
-            self._token, account_ns = resolve_credential(self._server_url)
+            self._token, principal = resolve_credential(self._server_url)
             self.runs.server_url = self._server_url
-            self.runs.account_ns = account_ns
+            self.runs.principal = principal
+            if principal is None:
+                log.warning(
+                    "Could not identify the authenticated account. New calls "
+                    "proceed, but an unresolved call cannot later be confirmed "
+                    "as ours and will fail closed. Set CALLE_ACCOUNT_ID."
+                )
 
     def _client(self):
         if self._Client is None:
@@ -780,29 +878,30 @@ class CalleDriver:
                             language=language)
             return None
 
-        key = self.runs.key(phone, goal, region)
+        key = self.runs.claim_key(phone, goal)
         # Atomic claim. Raises RunLocked if another live process holds this
         # recipient, or AmbiguousRun if a previous attempt left a create whose
         # outcome is unknown.
         saved = self.runs.claim(key, mask(phone), region)
 
-        if saved.get("run_id"):
-            log.info("Resuming run %s for %s", saved["run_id"][:12], mask(phone))
-            final = await self.poll(saved["run_id"])
+        saved_attempt = saved.get("attempt") or {}
+        if saved_attempt.get("run_id"):
+            log.info("Resuming run %s for %s", saved_attempt["run_id"][:12], mask(phone))
+            final = await self.poll(saved_attempt["run_id"])
             self.runs.mark_done(key, self._persist("result", final).name)
             return final
 
         plan: dict[str, Any] | None = None
-        if saved.get("plan_id"):
+        if saved_attempt.get("plan_id"):
             try:
-                self._assert_token_fresh(saved.get("confirm_expires_at"))
+                self._assert_token_fresh(saved_attempt.get("confirm_expires_at"))
                 plan = {
-                    "plan_id": saved["plan_id"],
-                    "confirm_token": saved["confirm_token"],
-                    "confirm_expires_at": saved.get("confirm_expires_at"),
+                    "plan_id": saved_attempt["plan_id"],
+                    "confirm_token": saved_attempt["confirm_token"],
+                    "confirm_expires_at": saved_attempt.get("confirm_expires_at"),
                     "ready_to_run": True,
                 }
-                log.info("Reusing plan %s for %s", saved["plan_id"], mask(phone))
+                log.info("Reusing plan %s for %s", saved_attempt["plan_id"], mask(phone))
             except RuntimeError:
                 plan = None   # expired token; re-plan below. Nothing was dialled.
 
