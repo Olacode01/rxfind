@@ -27,7 +27,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from calle_driver import CalleDriver, CallBudget, parse_summary_fields
+from calle_driver import CalleDriver, CallBudget, parse_summary_fields, redact
 
 log = logging.getLogger("rxfind")
 
@@ -273,8 +273,9 @@ def render(records: list[dict[str, Any]]) -> str:
     out += ["  ".join(c.ljust(w) for c, w in zip(row, widths)) for row in rows]
 
     for i, r in enumerate(records, 1):
+        # Free text lifted from the conversation — scrubbed on the way out.
         if r.get("pharmacist_notes"):
-            out.append(f"  [{i}] {r['pharmacist_notes']}")
+            out.append(f"  [{i}] {redact(str(r['pharmacist_notes']))}")
     return "\n".join(out)
 
 

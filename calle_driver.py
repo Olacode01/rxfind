@@ -86,6 +86,41 @@ def mask(phone: str) -> str:
     return f"…{phone[-4:]}" if len(phone) >= 4 else "…"
 
 
+# A run of digits long enough to be a phone number, however punctuated.
+_PHONE_LIKE = re.compile(r"\+?\d[\d\s\-().]{6,}\d")
+
+# Activity kinds that quote the live call.
+_SPEECH_KINDS = {"callee_realtime"}
+
+
+def redact(text: str | None) -> str:
+    """Strip anything phone-number-shaped from free text before it is logged.
+
+    Provider activity and model-extracted fields are derived from a live
+    conversation with a third party. Masking the number you dialled while
+    printing the conversation it produced is not masking. Runs of eight or more
+    digits are redacted; prices, quantities and durations survive.
+    """
+    if not text:
+        return ""
+
+    def _scrub(match: re.Match[str]) -> str:
+        digits = re.sub(r"\D", "", match.group())
+        if len(digits) < 8:
+            return match.group()
+        return f"[redacted …{digits[-4:]}]"
+
+    return _PHONE_LIKE.sub(_scrub, text)
+
+
+def redact_activity(kind: str | None, message: str | None,
+                    show_conversation: bool = False) -> str | None:
+    """What may be logged from one activity entry. None means: don't."""
+    if (kind or "") in _SPEECH_KINDS and not show_conversation:
+        return None
+    return redact(message)
+
+
 # --------------------------------------------------------------------------
 # Auth
 # --------------------------------------------------------------------------
@@ -674,6 +709,7 @@ class CalleDriver:
         store_dir: Path = Path("runs"),
         server_url: str = SERVER_URL,
         runs: RunStore | None = None,
+        show_conversation: bool = False,
     ) -> None:
         self.budget = budget
         self.dry_run = dry_run
@@ -681,6 +717,8 @@ class CalleDriver:
         self.store_dir.mkdir(exist_ok=True)
         self._server_url = server_url
         self.runs = runs or RunStore()
+        # Off by default: the activity feed quotes a third party's speech.
+        self.show_conversation = show_conversation
 
         # Credentials and the transport are only touched in live mode. A dry
         # run must not read the token or open a socket — otherwise it leaks the
@@ -842,11 +880,19 @@ class CalleDriver:
                 nxt = nxt if isinstance(nxt, dict) else {}  # string on plan_call
                 action = nxt.get("action")
 
+                # Cumulative on every poll, and it quotes the live call —
+                # dedupe, withhold speech, scrub the rest.
                 for entry in res.get("activity", []):
                     key = f"{entry.get('ts')}|{entry.get('message')}"
-                    if key not in seen:
-                        seen.add(key)
-                        log.info("  [%s] %s", entry.get("kind"), entry.get("message"))
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    safe = redact_activity(
+                        entry.get("kind"), entry.get("message"),
+                        show_conversation=self.show_conversation,
+                    )
+                    if safe:
+                        log.info("  [%s] %s", entry.get("kind"), safe)
 
                 if status in TERMINAL_STATUSES or action in TERMINAL_ACTIONS:
                     self._persist("result", res)
