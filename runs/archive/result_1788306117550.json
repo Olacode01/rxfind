@@ -1,0 +1,887 @@
+{
+  "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+  "requested_run_id": null,
+  "parent_run_id": null,
+  "root_run_id": null,
+  "status": "COMPLETED",
+  "message": "The pharmacy could not be reached for a live stock check and may be busy or unavailable. I suggest retrying in about 45 minutes. You can confirm that suggested retry time, provide a different retry time, or ask to retry immediately.",
+  "display_goal": "Call a pharmacy on behalf of a patient looking for medication. Identify yourself immediately as an automated assistant, keep the call brief and polite, and ask whether they currently have amoxicillin 500mg in stock; the patient needs 21 capsules. Capture structured results using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached; do not treat that as a successful stock check.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "result": {
+    "summary": "The pharmacy could not be reached for a live stock check; the call went to voicemail and no availability information was obtained. The recipient may be busy or unavailable, so I suggest retrying in about 45 minutes. You can confirm that suggested retry time, provide a different retry time, or ask to retry immediately.",
+    "post_summary": "The pharmacy could not be reached for a live stock check; the call went to voicemail and no availability information was obtained. The recipient may be busy or unavailable, so I suggest retrying in about 45 minutes. You can confirm that suggested retry time, provide a different retry time, or ask to retry immediately.",
+    "outcome": {
+      "task_completed": false,
+      "completion_confidence": {
+        "score": 0.86,
+        "label": "high"
+      },
+      "evidence": [
+        "The call reached the pharmacy voicemail rather than a live staff member.",
+        "A message about the amoxicillin 500mg stock check was recorded and sent.",
+        "No stock, price, prescription, hold, or alternative-branch information was obtained."
+      ]
+    },
+    "extracted": {
+      "goal": "Call a pharmacy on behalf of a patient looking for medication. Identify yourself immediately as an automated assistant, keep the call brief and polite, and ask whether they currently have amoxicillin 500mg in stock; the patient needs 21 capsules. Capture structured results using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached; do not treat that as a successful stock check.",
+      "region": "GB",
+      "repair": {
+        "decision": {
+          "next_step": {
+            "action": "ask_user_for_retry_confirmation",
+            "plan_id": "p91832ATZ",
+            "tool_name": "plan_call",
+            "instruction": "The pharmacy could not be reached for a live stock check and may be busy or unavailable. I suggest retrying in about 45 minutes. You can confirm that suggested retry time, provide a different retry time, or ask to retry immediately.",
+            "parent_run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+            "required_user_input": []
+          },
+          "repair_type": "no_answer",
+          "execution_mode": "time_shift_retry",
+          "required_user_input": [],
+          "schedule_suggestion": {
+            "confidence": "medium",
+            "retry_strategy": "short_delay",
+            "retry_after_reason": "The call reached voicemail and the pharmacy may be temporarily unavailable.",
+            "requested_delay_minutes": null
+          }
+        }
+      },
+      "calling": {
+        "calls": [
+          {
+            "status": "finished",
+            "reason_code": "0",
+            "call_end_time": "2026-09-01T23:41:37.818333+00:00",
+            "call_start_time": "2026-09-01T23:40:36.097518+00:00",
+            "duration_seconds": 61
+          }
+        ],
+        "status": "finished",
+        "ended_at": "2026-09-01T23:41:37.818333+00:00",
+        "started_at": "2026-09-01T23:40:36.097518+00:00",
+        "callee_count": 1,
+        "duration_seconds": 61
+      },
+      "language": "English",
+      "to_phones": [
+        "+15550103"
+      ]
+    },
+    "transcript": "[00:00:00] BOT: Hello,\n[00:00:00] BOT: this is an automated assistant calling on behalf of a patient.\n[00:00:11] USER: Over the water, Sydney by truck. Can't take your call right now. Just leave your message after the tone. When you're done, press hash or just hang up.\n[00:00:13] BOT: Hello,\n[00:00:13] BOT: this is an automated assistant calling on behalf of a patient to ask whether you currently have amoxicillin five hundred milligrams in stock;\n[00:00:20] BOT: the patient needs twenty-one capsules.\n[00:00:29] BOT: Hello,\n[00:00:29] BOT: this is an automated assistant calling on behalf of a patient to ask whether you currently have amoxicillin five hundred milligrams in stock;\n[00:00:46] USER: To leave this message, press 1. If you want to listen back to it, press 2. If you want to re record it, press 3. If you don't want to leave a message, press 4. To change your confidentiality settings, press 5. To leave this message and end the call, just hang up.\n[00:00:57] USER: You've recorded your message. What would you? Your message has been sent. Thanks for your message that options not available. To leave a message for someone else, press 2.",
+    "call_id": "17fbbbb019a745f9a8771a73d1673360",
+    "call_ids": [
+      "17fbbbb019a745f9a8771a73d1673360"
+    ],
+    "batch": null
+  },
+  "expires_at": null,
+  "activity": [
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:39:15.994355Z",
+      "level": "info",
+      "kind": "stage_start",
+      "message": "run_call started.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:39:19.442304Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "botlab create bot.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:39:47.396167Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "calling resolve robot id.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:39:49.872556Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "calling create task.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:39:50.670241Z",
+      "level": "info",
+      "kind": "result",
+      "message": "calling task created.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:39:51.648039Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=pending",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:39:59.483001Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=calling",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:06.660732Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call is ringing.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:36.429922Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call connected.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:38.109020Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Hello,",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:38.686563Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: this is an automated assistant calling on behalf of a patient.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:39.873598Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: over the water",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:40.450020Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: over the water sydney",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:41.173864Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: over the water sydney nacho",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:41.460814Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:42.353957Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:42.650815Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:42.960211Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:43.255748Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:43.977742Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:44.264313Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:44.683111Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:44.969139Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message after the",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:45.265717Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message after the tone",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:46.251133Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message after the tone when",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:46.564029Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message after the tone when you're done",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:46.876588Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message after the tone when you're done press",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:47.174353Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message after the tone when you're done press hash",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:47.885128Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message after the tone when you're done press hash or just",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:48.171569Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. can't take your call right now just leave your message after the tone when you're done press hash or jus...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:49.228970Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Over the water, Sydney by truck. Can't take your call right now. Just leave your message after the tone. When you're done, press hash or ...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:51.240034Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Hello,",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:51.807022Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: this is an automated assistant calling on behalf of a patient to ask whether you currently have amoxicillin five hundred milligrams in st...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:40:58.777746Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: the patient needs twenty-one capsules.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:07.438169Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Hello,",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:07.749913Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:08.047689Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: this is an automated assistant calling on behalf of a patient to ask whether you currently have amoxicillin five hundred milligrams in st...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:08.337965Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:09.064772Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:09.757842Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:10.061181Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:10.376277Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:10.662996Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee interrupted: Hello, this is an automated assistant cal ... [interrupted]",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:10.972169Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:11.258631Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:11.670573Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:11.980185Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:12.568177Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:12.983424Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:13.280146Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:13.589391Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:14.174101Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:14.683168Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:15.564248Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:15.888456Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:16.267993Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:16.568609Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:17.061997Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:17.374099Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:18.367866Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:18.688098Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:18.998686Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:19.367450Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:19.692197Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:19.978536Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:20.281966Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:20.597321Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:21.711200Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:22.018339Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:22.343255Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:22.670506Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:22.967145Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:23.488330Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:23.774721Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:24.180976Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: to leave this message press 1 if you want to listen back to it press 2 if you want to rerecord it press 3 if you don't want to leave a me...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:24.813410Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: To leave this message, press 1. If you want to listen back to it, press 2. If you want to re record it, press 3. If you don't want to lea...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:25.652510Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:25.967179Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:26.263754Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:27.257509Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:27.549787Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:27.874177Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:28.170689Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:28.571408Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:29.452003Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:29.763600Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:30.156691Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:31.069971Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:31.754676Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that options",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:32.067741Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that options not available",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:32.962192Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that options not available to leave",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:33.375092Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that options not available to leave a",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:33.664421Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that options not available to leave a mess...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:33.964249Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that options not available to leave a mess...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:34.951726Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that options not available to leave a mess...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:35.264316Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: you've recorded your message what would you your message has been sent thanks for your message that options not available to leave a mess...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:35.960436Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: You've recorded your message. What would you? Your message has been sent. Thanks for your message that options not available. To leave a ...",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:38.136020Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call ended; syncing final Calling result.",
+      "data": {}
+    },
+    {
+      "run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+      "ts": "2026-09-01T23:41:49.597390Z",
+      "level": "info",
+      "kind": "result",
+      "message": "Call ended from realtime events.",
+      "data": {}
+    }
+  ],
+  "next_cursor": "1788306109598-0",
+  "next_step": {
+    "action": "ask_user_for_retry_confirmation",
+    "tool_name": "plan_call",
+    "run_id": null,
+    "plan_id": "p91832ATZ",
+    "parent_run_id": "ZRzdb_taE2Y4m1F80FKbdA",
+    "poll_after_seconds": null,
+    "scheduled_at": null,
+    "schedule_timezone": null,
+    "required_user_input": [],
+    "instruction": "The pharmacy could not be reached for a live stock check and may be busy or unavailable. I suggest retrying in about 45 minutes. You can confirm that suggested retry time, provide a different retry time, or ask to retry immediately."
+  }
+}

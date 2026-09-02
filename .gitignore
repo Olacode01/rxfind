@@ -34,3 +34,6 @@ DEMO.md
 # and is what makes replay mode work without spending credits.
 # Phone numbers in these fixtures have been replaced with the reserved
 # fictional range +1 555 01xx. Re-check before committing new ones.
+
+# lock sidecars
+*.lock

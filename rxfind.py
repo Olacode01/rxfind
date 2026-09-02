@@ -146,6 +146,54 @@ def pharmacy_goal(drug: str, dosage: str, quantity: str) -> str:
 MIN_CONFIDENCE = 0.6
 
 
+def _from_prose(summary: str) -> dict[str, Any]:
+    """Recover what can be read from a narrative summary.
+
+    Deliberately conservative. This only picks up statements a human would read
+    the same way — "partial stock", "fewer than", an explicit capsule count, an
+    explicit hold duration. Anything ambiguous stays unknown, because inventing
+    a stock level from prose is exactly the failure the completion gate exists
+    to prevent.
+
+    The full summary is always carried through as a note, so the user sees what
+    was actually said even when nothing structured can be derived.
+    """
+    text = summary.lower()
+    out: dict[str, Any] = {}
+
+    if any(p in text for p in ("partial stock", "fewer than", "less than",
+                              "not enough", "only about")):
+        out["in_stock"] = "partial"
+    elif any(p in text for p in ("do not have", "don't have", "did not have",
+                                "out of stock", "no stock")):
+        out["in_stock"] = "no"
+    elif any(p in text for p in ("in stock", "have it", "confirmed availability",
+                                "they have")):
+        out["in_stock"] = "yes"
+
+    # "10 units" — a count stated directly against a unit noun. The negative
+    # lookahead keeps a dosage ("500mg capsules") from being read as a count.
+    qty = re.search(r"(\d{1,4})\s+(?:capsules?|tablets?|units?)\b", text)
+    if not qty:
+        # "…have about 14 amoxicillin 500mg capsules" — a count separated from
+        # its unit by the drug name. Anchor on the quantifier instead, and
+        # reject anything that is really a dose.
+        qty = re.search(r"(?:about|approximately|around|have|only)\s+"
+                        r"(\d{1,4})(?!\s*(?:mg|ml|mcg|g\b))", text)
+    if qty:
+        out["quantity_available"] = qty.group(1)
+
+    hold = re.search(r"hold[^.]*?(?:about|approximately|around)?\s*"
+                     r"(\d{1,3})\s*hour", text)
+    if hold:
+        out["hold_duration_hours"] = hold.group(1)
+        out["can_hold"] = "yes"
+
+    # Whatever was derived, the narrative itself is the honest record.
+    out["pharmacist_notes"] = summary.strip()
+    return out
+
+
 def to_record(final: dict[str, Any], pharmacy: dict[str, str] | None = None) -> dict[str, Any]:
     """One terminal get_call_run response -> one ranked-list row.
 
@@ -168,6 +216,13 @@ def to_record(final: dict[str, Any], pharmacy: dict[str, str] | None = None) -> 
 
     if reached:
         fields = parse_summary_fields(summary, ALL_KEYS)
+        # CALL-E's summary format is not stable. Most runs return `key=value`
+        # pairs; some return a narrative paragraph instead. A completed call
+        # whose summary happens to be prose was rendering as an empty row —
+        # the information was there, the parser just couldn't see it.
+        unstructured = not fields and bool(summary)
+        if unstructured:
+            fields = _from_prose(summary)
         # `extracted` is mostly a request echo, but check it for real domain
         # keys in case that gets fixed upstream.
         if isinstance(extracted, dict):
@@ -204,6 +259,9 @@ def to_record(final: dict[str, Any], pharmacy: dict[str, str] | None = None) -> 
         task_completed=completed,
         reached=reached,
         verified=verified,
+        # True when the provider returned prose rather than key=value pairs, so
+        # the fields were inferred rather than stated.
+        unstructured=locals().get("unstructured", False),
         confidence_score=confidence,
         confidence_label=confidence_label,
         evidence=outcome.get("evidence") or [],

@@ -1,0 +1,46 @@
+{
+  "run_id": "a_ZsjX-uj3DdqJp85TWebQ",
+  "requested_run_id": null,
+  "parent_run_id": null,
+  "root_run_id": null,
+  "status": "PREPARING",
+  "message": "run_call started.",
+  "display_goal": "You are calling a pharmacy on behalf of a patient looking for a medication. Identify yourself as an automated assistant immediately, and keep the call brief and polite.\n\nFind out whether they currently have amoxicillin 500mg in stock. The patient needs 21 capsules.\n\nCapture these fields in the structured result, using exactly these key names:\n- in_stock: yes, no, partial, or unknown. Use partial if they have some but fewer than the patient needs.\n- form_available: brand, generic, both, or unknown\n- quantity_available: integer units they have\n- unit_price: number, price per unit\n- currency: three-letter currency code\n- requires_prescription: yes, no, or unknown\n- can_hold: yes, no, or unknown\n- hold_duration_hours: number of hours they will hold it\n- alternative_suggested: any alternative or other branch they mention\n- pharmacist_notes: anything else useful, one short sentence\n\nIf they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached; do not treat that as a successful stock check.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "result": {
+    "summary": null,
+    "post_summary": null,
+    "outcome": null,
+    "extracted": {},
+    "transcript": null,
+    "call_id": null,
+    "call_ids": [],
+    "batch": null
+  },
+  "expires_at": null,
+  "activity": [
+    {
+      "run_id": "a_ZsjX-uj3DdqJp85TWebQ",
+      "ts": "2026-09-01T23:39:13.666286Z",
+      "level": "info",
+      "kind": "stage_start",
+      "message": "run_call started.",
+      "data": {}
+    }
+  ],
+  "next_cursor": "1788305953667-0",
+  "next_step": {
+    "action": "poll_get_call_run",
+    "tool_name": "get_call_run",
+    "run_id": "a_ZsjX-uj3DdqJp85TWebQ",
+    "plan_id": null,
+    "parent_run_id": null,
+    "poll_after_seconds": 10,
+    "scheduled_at": null,
+    "schedule_timezone": null,
+    "required_user_input": [],
+    "instruction": "The call result is still in progress or being finalized. Poll get_call_run again for this run; do not call plan_call or run_call again."
+  }
+}

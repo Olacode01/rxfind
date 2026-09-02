@@ -1,0 +1,15 @@
+{
+  "plan_id": "pJGVS5QC8",
+  "ready_to_run": true,
+  "next_step": "The plan is ready. If a plan card UI is present, let it continue execution and do not call `run_call` again in chat. Only call `run_call` yourself if no plan card UI is available or the user explicitly asks to start or retry the call in chat.",
+  "clarifying_questions": [],
+  "display_goal": "You are calling a pharmacy on behalf of a patient looking for a medication. Identify yourself as an automated assistant immediately, and keep the call brief and polite.\n\nFind out whether they currently have amoxicillin 500mg in stock. The patient needs 21 capsules.\n\nCapture these fields in the structured result, using exactly these key names:\n- in_stock: yes, no, partial, or unknown. Use partial if they have some but fewer than the patient needs.\n- form_available: brand, generic, both, or unknown\n- quantity_available: integer units they have\n- unit_price: number, price per unit\n- currency: three-letter currency code\n- requires_prescription: yes, no, or unknown\n- can_hold: yes, no, or unknown\n- hold_duration_hours: number of hours they will hold it\n- alternative_suggested: any alternative or other branch they mention\n- pharmacist_notes: anything else useful, one short sentence\n\nIf they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached; do not treat that as a successful stock check.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "questions": [],
+  "confirm_summary": "Ready to place the call immediately to the pharmacy at ...8767 in English. The assistant will identify itself as automated, ask whether amoxicillin 500mg is in stock for 21 capsules, capture the requested stock/price/prescription/hold/alternative details, avoid placing an order or commitment, thank them, and end the call. If nobody answers, it will report that the pharmacy could not be reached.",
+  "confirm_token": "cE1H4WXQMAF77Q01923BT",
+  "confirm_expires_at": "2026-09-02T23:38:55.376181Z",
+  "expires_at": "9999-12-31T23:59:59Z"
+}

@@ -1,0 +1,15 @@
+{
+  "plan_id": "p91832ATZ",
+  "ready_to_run": true,
+  "next_step": "The plan is ready. If a plan card UI is present, let it continue execution and do not call `run_call` again in chat. Only call `run_call` yourself if no plan card UI is available or the user explicitly asks to start or retry the call in chat.",
+  "clarifying_questions": [],
+  "display_goal": "Call a pharmacy on behalf of a patient looking for medication. Identify yourself immediately as an automated assistant, keep the call brief and polite, and ask whether they currently have amoxicillin 500mg in stock; the patient needs 21 capsules. Capture structured results using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached; do not treat that as a successful stock check.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "questions": [],
+  "confirm_summary": "Ready to place the call immediately to the pharmacy at ...9038 in English. The assistant will identify itself as automated, check stock for 21 capsules of amoxicillin 500mg, ask about price, prescription requirement, holding, and alternatives if needed, and will not place an order or commit on the patient\u2019s behalf.",
+  "confirm_token": "cMVZ83S5K9AQ4DPR128BW",
+  "confirm_expires_at": "2026-09-02T23:38:55.389240Z",
+  "expires_at": "9999-12-31T23:59:59Z"
+}

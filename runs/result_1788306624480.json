@@ -1,0 +1,191 @@
+{
+  "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+  "requested_run_id": null,
+  "parent_run_id": null,
+  "root_run_id": null,
+  "status": "NO ANSWER",
+  "message": "The pharmacy could not be reached, so the stock check was not completed. I can retry in about 45 minutes; you can confirm that timing, provide a different retry time, or ask me to retry immediately.",
+  "display_goal": "Call the pharmacy on behalf of a patient looking for medication. Immediately identify yourself as an automated assistant, keep the call brief and polite, and ask whether they currently have amoxicillin 500mg in stock; the patient needs 21 capsules. Capture the structured result using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), and pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. On success, report the stock, pricing, prescription, hold, alternative, and notes fields. On failure or if nobody answers, report that the pharmacy could not be reached or the stock check could not be completed; do not treat no answer as a successful stock check. Thank them and end the call.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "result": {
+    "summary": "The pharmacy did not answer, so the stock check was not completed; I can retry in about 45 minutes, or you can provide a different retry time or ask me to retry immediately.",
+    "post_summary": "The pharmacy did not answer, so the stock check was not completed; I can retry in about 45 minutes, or you can provide a different retry time or ask me to retry immediately.",
+    "outcome": {
+      "task_completed": false,
+      "completion_confidence": {
+        "score": 0.9,
+        "label": "high"
+      },
+      "evidence": [
+        "The call ended with a no-answer status.",
+        "There was no transcript or captured speech from the pharmacy.",
+        "No stock, pricing, prescription, hold, alternative, or notes information was obtained."
+      ]
+    },
+    "extracted": {
+      "goal": "Call the pharmacy on behalf of a patient looking for medication. Immediately identify yourself as an automated assistant, keep the call brief and polite, and ask whether they currently have amoxicillin 500mg in stock; the patient needs 21 capsules. Capture the structured result using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), and pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. On success, report the stock, pricing, prescription, hold, alternative, and notes fields. On failure or if nobody answers, report that the pharmacy could not be reached or the stock check could not be completed; do not treat no answer as a successful stock check. Thank them and end the call.",
+      "region": "GB",
+      "repair": {
+        "decision": {
+          "next_step": {
+            "action": "ask_user_for_retry_confirmation",
+            "plan_id": "pREP688GE",
+            "tool_name": "plan_call",
+            "instruction": "The pharmacy could not be reached, so the stock check was not completed. I can retry in about 45 minutes; you can confirm that timing, provide a different retry time, or ask me to retry immediately.",
+            "parent_run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+            "required_user_input": []
+          },
+          "repair_type": "no_answer",
+          "execution_mode": "time_shift_retry",
+          "required_user_input": [],
+          "schedule_suggestion": {
+            "confidence": "medium",
+            "retry_strategy": "short_delay",
+            "retry_after_reason": "The pharmacy may be temporarily unavailable or busy.",
+            "requested_delay_minutes": null
+          }
+        },
+        "commit_metadata": {
+          "child_run_id": null,
+          "blocked_reasons": [],
+          "committed_action": "none",
+          "real_world_action_committed": false
+        }
+      },
+      "calling": {
+        "calls": [
+          {
+            "status": "NO ANSWER",
+            "intention": "F",
+            "ring_type": "normal",
+            "hangup_type": "ByCallee",
+            "call_end_time": "2026-09-01 19:49:39",
+            "call_start_time": "2026-09-01 19:49:39",
+            "duration_seconds": 0
+          }
+        ],
+        "status": "NO ANSWER",
+        "ended_at": "2026-09-01 19:49:39",
+        "started_at": "2026-09-01 19:49:39",
+        "callee_count": 1,
+        "duration_seconds": 0
+      },
+      "language": "English",
+      "to_phones": [
+        "+15550102"
+      ]
+    },
+    "transcript": null,
+    "call_id": "571f874d511a486684ae1fcc86c04a9b",
+    "call_ids": [
+      "571f874d511a486684ae1fcc86c04a9b"
+    ],
+    "batch": null
+  },
+  "expires_at": null,
+  "activity": [
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:48:55.088017Z",
+      "level": "info",
+      "kind": "stage_start",
+      "message": "run_call started.",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:48:57.268933Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "botlab create bot.",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:49:25.100936Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "calling resolve robot id.",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:49:27.601319Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "calling create task.",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:49:28.538911Z",
+      "level": "info",
+      "kind": "result",
+      "message": "calling task created.",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:49:29.671765Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=pending",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:49:34.777073Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=calling",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:49:42.941911Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call is ringing.",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:49:44.021345Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call ended; syncing final Calling result.",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:50:12.017062Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=NO ANSWER",
+      "data": {}
+    },
+    {
+      "run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+      "ts": "2026-09-01T23:50:23.514208Z",
+      "level": "error",
+      "kind": "error",
+      "message": "calling task completed with status=NO ANSWER",
+      "data": {}
+    }
+  ],
+  "next_cursor": "1788306623515-0",
+  "next_step": {
+    "action": "ask_user_for_retry_confirmation",
+    "tool_name": "plan_call",
+    "run_id": null,
+    "plan_id": "pREP688GE",
+    "parent_run_id": "rI8Ok5gNsDt6X38xLKFb1A",
+    "poll_after_seconds": null,
+    "scheduled_at": null,
+    "schedule_timezone": null,
+    "required_user_input": [],
+    "instruction": "The pharmacy could not be reached, so the stock check was not completed. I can retry in about 45 minutes; you can confirm that timing, provide a different retry time, or ask me to retry immediately."
+  }
+}

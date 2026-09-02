@@ -1,0 +1,762 @@
+{
+  "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+  "requested_run_id": null,
+  "parent_run_id": null,
+  "root_run_id": null,
+  "status": "COMPLETED",
+  "message": "Call ended from realtime events.",
+  "display_goal": "Call a pharmacy on behalf of a patient looking for medication. Identify yourself immediately as an automated assistant, keep the call brief and polite, and find out whether they currently have amoxicillin 500mg in stock for a needed quantity of 21 capsules. Capture these structured result fields using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), and pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. On success, report the stock, pricing, prescription, hold, alternative, and notes fields. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached and do not treat that as a successful stock check.",
+  "schedule_mode": "immediate",
+  "scheduled_at": null,
+  "schedule_timezone": null,
+  "result": {
+    "summary": "Stock check completed. Results: in_stock=partial, form_available=unknown, quantity_available=10, unit_price=4.50, currency=GBP, requires_prescription=yes, can_hold=unknown, hold_duration_hours=unknown, alternative_suggested=none, pharmacist_notes=They have fewer than the requested 21 capsules and did not suggest an alternative.",
+    "post_summary": "Stock check completed. Results: in_stock=partial, form_available=unknown, quantity_available=10, unit_price=4.50, currency=GBP, requires_prescription=yes, can_hold=unknown, hold_duration_hours=unknown, alternative_suggested=none, pharmacist_notes=They have fewer than the requested 21 capsules and did not suggest an alternative.",
+    "outcome": {
+      "task_completed": true,
+      "completion_confidence": {
+        "score": 0.9,
+        "label": "high"
+      },
+      "evidence": [
+        "A pharmacy staff member answered and discussed amoxicillin 500mg stock.",
+        "They indicated some stock is available, but fewer than the requested 21 capsules: about 10 capsules.",
+        "They quoted \u00a34.50, said a prescription is required, and did not provide an alternative."
+      ]
+    },
+    "extracted": {
+      "goal": "Call a pharmacy on behalf of a patient looking for medication. Identify yourself immediately as an automated assistant, keep the call brief and polite, and find out whether they currently have amoxicillin 500mg in stock for a needed quantity of 21 capsules. Capture these structured result fields using exactly these key names: in_stock (yes, no, partial, or unknown; use partial if they have some but fewer than 21 capsules), form_available (brand, generic, both, or unknown), quantity_available (integer units they have), unit_price (number, price per unit), currency (three-letter currency code), requires_prescription (yes, no, or unknown), can_hold (yes, no, or unknown), hold_duration_hours (number of hours they will hold it), alternative_suggested (any alternative or other branch they mention), and pharmacist_notes (anything else useful, one short sentence). If they do not have it, still ask about alternatives or another branch. Do not place an order or commit to anything on the patient's behalf. On success, report the stock, pricing, prescription, hold, alternative, and notes fields. Thank them and end the call. If nobody answers, report that the pharmacy could not be reached and do not treat that as a successful stock check.",
+      "region": "GB",
+      "repair": {
+        "decision": {
+          "next_step": {
+            "action": "none",
+            "plan_id": null,
+            "tool_name": null,
+            "instruction": "No further action is needed; report the completed stock-check result to the user.",
+            "parent_run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+            "required_user_input": []
+          },
+          "repair_type": "none",
+          "execution_mode": "none",
+          "required_user_input": [],
+          "schedule_suggestion": null
+        }
+      },
+      "calling": {
+        "calls": [
+          {
+            "status": "finished",
+            "reason_code": "0",
+            "call_end_time": "2026-09-01T23:51:22.355503+00:00",
+            "call_start_time": "2026-09-01T23:49:46.302889+00:00",
+            "duration_seconds": 96
+          }
+        ],
+        "status": "finished",
+        "ended_at": "2026-09-01T23:51:22.355503+00:00",
+        "started_at": "2026-09-01T23:49:46.302889+00:00",
+        "callee_count": 1,
+        "duration_seconds": 96
+      },
+      "language": "English",
+      "to_phones": [
+        "+15550103"
+      ]
+    },
+    "transcript": "[00:00:00] BOT: Hello,\n[00:00:00] BOT: I'm an automated assistant calling on behalf of a patient.\n[00:00:08] USER: Yeah, yeah. Hello.\n[00:00:09] BOT: Could you tell me whether you currently have amoxicillin five hundred milligrams in stock for twenty-one capsules?\n[00:00:17] USER: Yes.\n[00:00:18] BOT: Thanks.\n[00:00:18] BOT: Do you have the capsules available, and if so, how many can you supply,\n[00:00:22] BOT: what\u2019s the price, and is a prescription required?\n[00:00:29] USER: And. And the price is \u00a34.50.\n[00:00:30] BOT: Got it.\n[00:00:31] BOT: How many capsules do you have available, and can you hold them for us if needed?\n[00:00:43] USER: I only have few. I only have few available. It's 10 but I can owe them.\n[00:00:44] BOT: Thanks.\n[00:00:44] BOT: Is that the capsule form of amoxicillin, and do you require a prescription?\n[00:00:52] USER: Yes, I have clarifications.\n[00:00:55] BOT: Could you clarify whether you mean the capsules are available,\n[00:00:57] BOT: and whether a prescription is required?\n[00:01:03] USER: Yeah, prescription is required.\n[00:01:04] BOT: Thanks.\n[00:01:04] BOT: Can you hold the ten capsules, and for how many hours?\n[00:01:07] BOT: Also, do you suggest any alternative or another branch if they need the full twenty-one?\n[00:01:16] USER: For now I don't know and I can only for.\n[00:01:17] BOT: Thanks.\n[00:01:17] BOT: Before I wrap up, is there anything else you\u2019d like to note about the stock or alternatives?\n[00:01:30] USER: US. The alternative I can't. I don't really have any alternative and then don't have anything to say.\n[00:01:31] BOT: Noted.\n[00:01:32] BOT: Thank you for your help, bye.",
+    "call_id": "4cc90aa56a1c4c30908d44b9dfb822eb",
+    "call_ids": [
+      "4cc90aa56a1c4c30908d44b9dfb822eb"
+    ],
+    "batch": null
+  },
+  "expires_at": null,
+  "activity": [
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:48:54.088116Z",
+      "level": "info",
+      "kind": "stage_start",
+      "message": "run_call started.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:48:56.782349Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "botlab create bot.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:18.719839Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "calling resolve robot id.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:21.324522Z",
+      "level": "info",
+      "kind": "external_call",
+      "message": "calling create task.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:22.540597Z",
+      "level": "info",
+      "kind": "result",
+      "message": "calling task created.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:23.042145Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=pending",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:28.162791Z",
+      "level": "info",
+      "kind": "progress",
+      "message": "calling task status=calling",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:35.898348Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call is ringing.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:46.620451Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call connected.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:47.538205Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Hello,",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:48.141470Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: I'm an automated assistant calling on behalf of a patient.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:53.107023Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yeah",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:53.929815Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yeah yeah",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:54.226553Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yeah yeah hello",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:55.936461Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Yeah, yeah. Hello.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:49:57.502365Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Could you tell me whether you currently have amoxicillin five hundred milligrams in stock for twenty-one capsules?",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:04.920189Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yes",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:05.230219Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Yes.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:05.699093Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Thanks.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:06.314641Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Do you have the capsules available, and if so, how many can you supply,",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:08.244985Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: And.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:10.331210Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: what\u2019s the price, and is a prescription required?",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:15.834031Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: And. and the",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:16.513023Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: And. and the price is 4",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:16.827990Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: And. and the price is \u00a34.50",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:17.415666Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: And. And the price is \u00a34.50.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:18.079982Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Got it.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:18.742030Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: How many capsules do you have available, and can you hold them for us if needed?",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:25.396337Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:25.705778Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:26.596499Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:27.009202Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:27.299507Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only have",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:27.623561Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only have few avail",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:28.004840Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only have few available",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:29.595114Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only have few available it's",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:29.900352Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only have few available it's 10",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:30.220766Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only have few available it's 10 but i",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:30.517792Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only have few available it's 10 but i can",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:30.827425Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: i only have few i only have few available it's 10 but i can owe them",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:31.128853Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: I only have few. I only have few available. It's 10 but I can owe them.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:31.616719Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Thanks.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:32.221477Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Is that the capsule form of amoxicillin, and do you require a prescription?",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:38.717587Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yes",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:39.003875Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yes i have",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:39.419431Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yes i have clarifications",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:39.937316Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Yes, I have clarifications.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:42.618572Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Could you clarify whether you mean the capsules are available,",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:45.333239Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: and whether a prescription is required?",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:49.491147Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yeah",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:50.202887Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yeah prescription is",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:50.515008Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: yeah prescription is required",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:51.055379Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: Yeah, prescription is required.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:51.639601Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Thanks.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:52.222320Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Can you hold the ten capsules, and for how many hours?",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:50:55.301869Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Also, do you suggest any alternative or another branch if they need the full twenty-one?",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:01.825202Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: for now i",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:02.213860Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: for now i don't know",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:02.831644Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: for now i don't know and",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:03.117551Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: for now i don't know and i can only",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:03.802739Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: for now i don't know and i can only for",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:04.223225Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: For now I don't know and I can only for.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:04.776843Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Thanks.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:05.383355Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Before I wrap up, is there anything else you\u2019d like to note about the stock or alternatives?",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:07.502867Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:12.910874Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:13.392420Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the altern",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:13.689607Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:14.217508Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:14.514596Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:14.823819Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:15.296734Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any altern",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:15.722275Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any alternative",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:16.008651Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any alternative and",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:16.629597Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any alternative and then",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:17.002423Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any alternative and then don't have",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:17.426548Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any alternative and then don't have any",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:17.724497Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any alternative and then don't have anything to",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:18.011520Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. the alternative i can't i don't really have any alternative and then don't have anything to say",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:18.351625Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Callee said: US. The alternative I can't. I don't really have any alternative and then don't have anything to say.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:18.938010Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Noted.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:19.662526Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Bot is speaking: Thank you for your help, bye.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:22.687977Z",
+      "level": "info",
+      "kind": "callee_realtime",
+      "message": "Call ended; syncing final Calling result.",
+      "data": {}
+    },
+    {
+      "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+      "ts": "2026-09-01T23:51:37.860106Z",
+      "level": "info",
+      "kind": "result",
+      "message": "Call ended from realtime events.",
+      "data": {}
+    }
+  ],
+  "next_cursor": "1788306697861-0",
+  "next_step": {
+    "action": "report_result",
+    "tool_name": null,
+    "run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+    "plan_id": null,
+    "parent_run_id": "KB7I7VuAD3E6g3iOlJnD7Q",
+    "poll_after_seconds": null,
+    "scheduled_at": null,
+    "schedule_timezone": null,
+    "required_user_input": [],
+    "instruction": "Report the final call result to the user. Do not start another call."
+  }
+}
