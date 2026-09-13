@@ -406,7 +406,9 @@ class ValidationRegression(unittest.TestCase):
                 ps.validate_e164(bad)
 
     def test_mask(self):
-        self.assertEqual(ps.mask("+447827929230"), "…9230")
+        # Fictional range, like every other number in this repo. A test that
+        # asserts numbers get masked should not itself carry a real one.
+        self.assertEqual(ps.mask("+15550199"), "…0199")
 
     def test_incomplete_call_reports_no_stock(self):
         final = {
@@ -430,6 +432,77 @@ class ValidationRegression(unittest.TestCase):
              "can_hold": "no", "confidence": 0.95, "verified": True},
         ])
         self.assertEqual(ranked[0]["pharmacy"], "confident no")
+
+
+class ProseSummaryRegression(unittest.TestCase):
+    """CALL-E's summary format is not stable. A completed call returning a
+    narrative paragraph rather than key=value pairs must still produce a row —
+    but only for what the prose actually states."""
+
+    def _record(self, summary: str, confidence: float = 0.9) -> dict:
+        return ps.to_record(
+            {"status": "COMPLETED",
+             "result": {"summary": summary,
+                        "outcome": {"task_completed": True,
+                                    "completion_confidence": {"score": confidence}}}},
+            {"name": "Oakhill", "phone": "+15550101"},
+        )
+
+    def test_prose_summary_is_not_a_blank_row(self):
+        record = self._record(
+            "The pharmacist confirmed they have it in stock — about 40 "
+            "capsules — and can hold it for 2 hours under the patient's name."
+        )
+        self.assertEqual(record["in_stock"], "yes")
+        self.assertEqual(record["quantity_available"], 40)
+        self.assertEqual(record["can_hold"], "yes")
+        self.assertEqual(record["hold_duration_hours"], 2)
+        self.assertTrue(record["verified"])
+
+    def test_prose_negative_is_read_as_no(self):
+        record = self._record("They do not have that medication at present.")
+        self.assertEqual(record["in_stock"], "no")
+
+    def test_prose_partial_is_read_as_partial(self):
+        record = self._record(
+            "They have partial stock, fewer than the 30 tablets requested."
+        )
+        self.assertEqual(record["in_stock"], "partial")
+
+    def test_dosage_is_not_mistaken_for_a_quantity(self):
+        # "500mg" must not become a stock count of 500.
+        record = self._record(
+            "They confirmed they have amoxicillin 500mg in stock."
+        )
+        self.assertNotEqual(record["quantity_available"], 500)
+
+    def test_ambiguous_prose_stays_unknown(self):
+        # No stock claim a human would read unambiguously. Abstaining is the
+        # correct answer; guessing here is the failure the gate exists to stop.
+        record = self._record(
+            "Spoke to the counter staff, who checked the shelf and the back."
+        )
+        self.assertEqual(record["in_stock"], "unknown")
+        self.assertIsNone(record["quantity_available"])
+
+    def test_narrative_is_always_carried_through(self):
+        summary = "Spoke to the counter staff, who checked the shelf."
+        self.assertIn("counter staff", self._record(summary)["pharmacist_notes"])
+
+    def test_prose_path_does_not_bypass_the_completion_gate(self):
+        record = ps.to_record(
+            {"status": "NO ANSWER",
+             "result": {"summary": "They have it in stock, about 40 capsules.",
+                        "outcome": {"task_completed": False,
+                                    "completion_confidence": {"score": 0.2}}}},
+            {"name": "Ghost", "phone": "+15550100"},
+        )
+        self.assertEqual(record["in_stock"], "unknown")
+        self.assertIsNone(record["quantity_available"])
+
+    def test_structured_summary_still_wins(self):
+        record = self._record("in_stock=no, quantity_available=0")
+        self.assertEqual(record["in_stock"], "no")
 
 
 if __name__ == "__main__":

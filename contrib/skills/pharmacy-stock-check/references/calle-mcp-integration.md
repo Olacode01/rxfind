@@ -97,6 +97,33 @@ Sort field names longest-first so `unit_price` matches before `price`.
 
 Check `result.extracted` for domain keys as a fallback in case this changes.
 
+### …and the summary is not always key=value
+
+The same goal, on the same endpoint, returns two different shapes. Most runs
+give you the pairs above. Some give you a paragraph instead:
+
+```
+The pharmacist confirmed they have the medication in stock — about 40
+capsules — and can hold it for 2 hours under the patient's name.
+```
+
+Both arrive with `task_completed: true` and confidence above 0.9, and nothing
+in the response says which one you got. A key=value parser returns `{}` for the
+prose form, so a call that succeeded — that a pharmacist answered in full —
+renders as a blank row.
+
+Handle it by detecting the empty parse and falling back to a prose reader, but
+make that reader **conservative**. It should recognise only what a human would
+read unambiguously, reject numbers that are really dosages (`500mg` must not
+become a stock count of 500), and return nothing where it is unsure. Carry the
+narrative through as a note either way, so the caller sees what was said even
+when nothing structured can be derived. See `from_prose()` in
+`scripts/pharmacy_search.py`.
+
+The temptation is to make the prose reader clever. Don't. A parser that guesses
+a stock level is worse than one that abstains, because the whole point of the
+completion gate is that this skill never reports availability it didn't hear.
+
 ---
 
 ## There is no `result_schema` on MCP

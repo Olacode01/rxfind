@@ -217,6 +217,86 @@ correctly instead of failing closed.
 
 ---
 
+## 9. `result.summary` has two incompatible formats for the same goal
+
+**Severity:** Medium — a successful call renders as an empty result
+
+**Expected:** a goal that names its output fields explicitly
+
+```
+Report back: in_stock (yes/no/partial), quantity_available, unit_price,
+can_hold (yes/no), hold_duration_hours, pharmacist_notes
+```
+
+produces a consistently shaped `result.summary` across runs.
+
+**Actual:** two different shapes, from the same goal text, on the same endpoint.
+
+Most runs return the requested pairs:
+
+```
+Result: in_stock=yes, quantity_available=40, unit_price=8.99,
+can_hold=yes, hold_duration_hours=2
+```
+
+Others return a narrative paragraph with no field names at all:
+
+```
+The pharmacist confirmed they have the medication in stock — about 40
+capsules — and can hold it for 2 hours under the patient's name.
+```
+
+Both came back with `task_completed: true` and `completion_confidence` above
+0.9. Nothing in the response distinguishes them: the format is not announced in
+`result`, and there is no flag or content-type to branch on.
+
+(This compounds finding #5. Because `result.extracted` carries the request echo
+rather than the extracted fields, `summary` is the only place the conversational
+data exists — so when its shape changes, there is no second source to fall back
+to.)
+
+**Why it matters:** a key=value parser sees no fields in the prose form and
+returns `{}`. The call succeeded, the pharmacist answered every question, the
+data is in the payload — and the row renders blank. That is the worst failure
+mode available here, because it is indistinguishable at a glance from
+"the pharmacy didn't answer", and it burns a call that cannot be un-placed.
+
+The cost is also asymmetric in a way that is easy to get wrong. The obvious fix
+is to parse the prose. But a prose parser that guesses will eventually report
+"in stock" from a sentence that said something else, and in a medication context
+that sends a patient across town for nothing. So the *safe* fix is more
+conservative than the *complete* one, and some genuinely answered calls have to
+stay unknown.
+
+**Workaround:** detect the empty-parse case (`not fields and summary`) and fall
+back to a deliberately conservative prose reader — one that recognises only
+statements a human would read unambiguously ("partial stock", an explicit unit
+count, an explicit hold duration), rejects numbers that are really dosages
+(`500mg` must not become a stock count of 500), and returns nothing where it is
+unsure. The full narrative is carried through as a note regardless, so the user
+always sees what was actually said even when nothing structured can be derived.
+Implemented as `from_prose()` in `scripts/pharmacy_search.py`.
+
+This recovers the blank rows, but it is pattern-matching against prose that has
+no contract, so it will drift.
+
+**Suggested fix:** any one of these would remove the guesswork entirely, in
+rough order of preference:
+
+1. A structured field — the `result_schema` that the REST surface already
+   advertises (finding #1), populated in `result` and honoured on MCP.
+2. Guarantee the key=value shape whenever the goal names its fields, so the
+   format is a function of the request rather than of the run.
+3. Failing both, declare the shape in the response (e.g.
+   `summary_format: "fields" | "prose"`) so clients can branch deterministically
+   instead of inferring it from a failed parse.
+
+The underlying capability is good — the prose summaries are accurate and
+readable, and finding #6 still stands on extraction quality. The problem is
+purely that a client cannot tell which contract it is being handed.
+
+---
+
 ## Template for further entries
 
 ## N. <title>

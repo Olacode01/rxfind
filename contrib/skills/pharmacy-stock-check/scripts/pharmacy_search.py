@@ -602,6 +602,59 @@ def parse_summary(summary: str) -> dict[str, str]:
     return out
 
 
+def from_prose(summary: str) -> dict[str, str]:
+    """Recover what can be read from a narrative summary.
+
+    CALL-E's summary format is not stable. Most runs return the `key=value`
+    pairs the goal asked for; some return a narrative paragraph instead, and
+    `parse_summary` sees nothing in those. A completed call whose summary
+    happens to be prose would otherwise render as an empty row — the
+    information was there, the parser just could not see it.
+
+    Deliberately conservative. This only picks up statements a human would
+    read the same way: an explicit "partial stock", an explicit unit count, an
+    explicit hold duration. Anything ambiguous stays unknown, because
+    inventing a stock level from prose is exactly the failure the completion
+    gate exists to prevent.
+
+    The full summary is always carried through as a note, so the caller sees
+    what was actually said even when nothing structured can be derived.
+    """
+    text = summary.lower()
+    out: dict[str, str] = {}
+
+    if any(p in text for p in ("partial stock", "fewer than", "less than",
+                               "not enough", "only about")):
+        out["in_stock"] = "partial"
+    elif any(p in text for p in ("do not have", "don't have", "did not have",
+                                 "out of stock", "no stock")):
+        out["in_stock"] = "no"
+    elif any(p in text for p in ("in stock", "have it", "confirmed availability",
+                                 "they have")):
+        out["in_stock"] = "yes"
+
+    # "10 units" — a count stated directly against a unit noun. The negative
+    # lookahead below keeps a dosage ("500mg capsules") from being read as one.
+    qty = re.search(r"(\d{1,4})\s+(?:capsules?|tablets?|units?)\b", text)
+    if not qty:
+        # "…have about 14 amoxicillin 500mg capsules" — a count separated from
+        # its unit noun by the drug name. Anchor on the quantifier instead.
+        qty = re.search(r"(?:about|approximately|around|have|only)\s+"
+                        r"(\d{1,4})(?!\s*(?:mg|ml|mcg|g\b))", text)
+    if qty:
+        out["quantity_available"] = qty.group(1)
+
+    hold = re.search(r"hold[^.]*?(?:about|approximately|around)?\s*"
+                     r"(\d{1,3})\s*hour", text)
+    if hold:
+        out["hold_duration_hours"] = hold.group(1)
+        out["can_hold"] = "yes"
+
+    # Whatever was derived, the narrative itself is the honest record.
+    out["pharmacist_notes"] = summary.strip()
+    return out
+
+
 def normalise(raw: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for name in FIELDS:
@@ -635,7 +688,10 @@ def to_record(final: dict[str, Any], pharmacy: dict[str, str]) -> dict[str, Any]
 
     if reached:
         summary = result.get("summary") or result.get("post_summary") or ""
-        record = normalise(parse_summary(summary))
+        fields = parse_summary(summary)
+        if not fields and summary:
+            fields = from_prose(summary)
+        record = normalise(fields)
     else:
         # Not a stock check. Say so rather than reporting whatever was scraped.
         record = {name: ("unknown" if name in ENUMS else None) for name in FIELDS}
